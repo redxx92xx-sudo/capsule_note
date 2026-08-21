@@ -1,0 +1,46 @@
+{
+  "@@locale": "ja",
+  "appTitle": "カプセルノート",
+  "capsulesPending": "未整理 {count} 件",
+  "@capsulesPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pressToRecord": "長押しで音声メモを記録",
+  "recordingListening": "録音中... 離すと完了",
+  "tapToRecordHint": "ボタンを長押しして録音してください",
+  "filterAll": "すべて",
+  "emptyCapsulesTitle": "カプセルノートがありません",
+  "emptyCapsulesSubtitle": "下のボタンを長押ししてアイデアを記録しましょう",
+  "saveAsNote": "カプセルを保存",
+  "voiceConversionDone": "音声変換完了",
+  "capsuleTitleLabel": "タイトル",
+  "rawTranscriptLabel": "音声テキスト",
+  "tagsLabel": "タグ (カンマ区切り)",
+  "proUpgradeTitle": "Capsule PRO にアップグレード",
+  "proBadge": "PRO",
+  "proSubtitle": "無制限のAI要約と完全広告非表示を解放",
+  "proFeature1": "完全広告非表示のミニマルなE-ink体験",
+  "proFeature2": "無制限のAI音声要約とアクションプラン抽出",
+  "proFeature3": "高度なMarkdownおよび音声データエクスポート",
+  "unlockRewardAd": "広告を見てAI枠を+3回追加",
+  "upgradeToProButton": "PRO 永久版を購入 (¥600)",
+  "restorePurchases": "購入を復元",
+  "quotaRemaining": "本日のAI利用枠: {count} 回",
+  "@quotaRemaining": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "rewardSuccess": "ボーナス獲得: AI利用枠が+3回追加されました！",
+  "switchLanguage": "言語切り替え",
+  "darkModeToggle": "ダークモードに切り替え",
+  "lightModeToggle": "ライトモードに切り替え",
+  "markAsDone": "整理済みにする",
+  "markAsPending": "未整理にする"
+}

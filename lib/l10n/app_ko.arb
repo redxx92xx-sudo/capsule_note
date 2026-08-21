@@ -1,0 +1,46 @@
+{
+  "@@locale": "ko",
+  "appTitle": "캡슐 노트",
+  "capsulesPending": "미정리 {count}개",
+  "@capsulesPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pressToRecord": "버튼을 길게 눌러 음성 메모 기록",
+  "recordingListening": "녹음 중... 손을 떼면 완료",
+  "tapToRecordHint": "버튼을 길게 눌러 음성을 녹음하세요",
+  "filterAll": "전체",
+  "emptyCapsulesTitle": "등록된 캡슐 노트가 없습니다",
+  "emptyCapsulesSubtitle": "하단 버튼을 길게 눌러 생각을 빠르게 기록해보세요",
+  "saveAsNote": "캡슐 노트 저장",
+  "voiceConversionDone": "음성 변환 완료",
+  "capsuleTitleLabel": "캡슐 제목",
+  "rawTranscriptLabel": "음성 텍스트 내용",
+  "tagsLabel": "태그 (쉼표로 구분)",
+  "proUpgradeTitle": "Capsule PRO 업그레이드",
+  "proBadge": "PRO",
+  "proSubtitle": "무제한 AI 요약 및 완전 무광고 전자잉크 경험",
+  "proFeature1": "100% 완전 광고 없는 미니멀 인터페이스",
+  "proFeature2": "무제한 AI 음성 요약 및 액션 아이템 추출",
+  "proFeature3": "고급 Markdown 및 오디오 데이터 내보내기",
+  "unlockRewardAd": "광고 시청하고 AI 이용권 +3회 받기",
+  "upgradeToProButton": "PRO 평생 이용권 구매 (₩6,600)",
+  "restorePurchases": "구매 내역 복원",
+  "quotaRemaining": "오늘의 AI 잔여 횟수: {count}회",
+  "@quotaRemaining": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "rewardSuccess": "보상 획득 완료: AI 횟수 +3회 추가!",
+  "switchLanguage": "언어 변경",
+  "darkModeToggle": "다크 모드로 전환",
+  "lightModeToggle": "라이트 모드로 전환",
+  "markAsDone": "정리 완료로 표시",
+  "markAsPending": "미정리로 표시"
+}

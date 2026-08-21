@@ -1,0 +1,46 @@
+{
+  "@@locale": "zh",
+  "appTitle": "膠囊筆記",
+  "capsulesPending": "{count} 則待整理",
+  "@capsulesPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pressToRecord": "長按按鈕記錄靈感便籤",
+  "recordingListening": "正在聆聽錄音中... 鬆開即完成",
+  "tapToRecordHint": "請長按按鈕進行語音錄製",
+  "filterAll": "全部",
+  "emptyCapsulesTitle": "尚無靈感膠囊",
+  "emptyCapsulesSubtitle": "長按下方按鈕隨時記錄語音與想法",
+  "saveAsNote": "儲存為膠囊便籤",
+  "voiceConversionDone": "語音轉化完成",
+  "capsuleTitleLabel": "膠囊標題",
+  "rawTranscriptLabel": "語音轉譯內容",
+  "tagsLabel": "標籤 (逗號分隔)",
+  "proUpgradeTitle": "升級至 Capsule PRO",
+  "proBadge": "PRO",
+  "proSubtitle": "解鎖無限 AI 智能摘要與純淨無廣告墨水屏體驗",
+  "proFeature1": "100% 極簡純淨無廣告介面",
+  "proFeature2": "無限次 AI 語音摘要與行動項目提取",
+  "proFeature3": "進階 Markdown 與音訊格式匯出",
+  "unlockRewardAd": "觀看廣告免費領取 +3 次 AI 額度",
+  "upgradeToProButton": "立即解鎖 PRO 終身版 (NT)",
+  "restorePurchases": "恢復購買記錄",
+  "quotaRemaining": "今日 AI 剩餘額度：{count} 次",
+  "@quotaRemaining": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "rewardSuccess": "已成功獲得獎勵：+3 次 AI 額度！",
+  "switchLanguage": "切換語言",
+  "darkModeToggle": "切換墨黑夜間",
+  "lightModeToggle": "切換紙質白模式",
+  "markAsDone": "標記為已整理",
+  "markAsPending": "標記為未整理"
+}

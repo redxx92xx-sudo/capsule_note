@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import '../models/capsule_model.dart';
+import '../l10n/app_localizations.dart';
+import '../services/ad_service.dart';
 import '../services/capsule_provider.dart';
+import '../services/locale_provider.dart';
+import '../services/monetization_provider.dart';
 import '../theme/app_theme.dart';
+import 'widgets/capsule_card.dart';
+import 'widgets/pro_modal.dart';
+import 'widgets/record_button.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,6 +23,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
   bool _isRecording = false;
   late AnimationController _rippleController;
+  BannerAd? _bannerAd;
+  bool _isBannerLoaded = false;
 
   @override
   void initState() {
@@ -24,11 +33,35 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       vsync: this,
       duration: const Duration(milliseconds: 1600),
     );
+    _loadBannerAd();
+  }
+
+  void _loadBannerAd() {
+    final monetization = Provider.of<MonetizationProvider>(context, listen: false);
+    if (monetization.isPro) return;
+
+    _bannerAd = AdService.instance.createBannerAd(
+      onAdLoaded: () {
+        if (mounted) {
+          setState(() {
+            _isBannerLoaded = true;
+          });
+        }
+      },
+      onAdFailedToLoad: (error) {
+        if (mounted) {
+          setState(() {
+            _isBannerLoaded = false;
+          });
+        }
+      },
+    );
   }
 
   @override
   void dispose() {
     _rippleController.dispose();
+    _bannerAd?.dispose();
     super.dispose();
   }
 
@@ -47,13 +80,20 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     _rippleController.stop();
     _rippleController.reset();
 
-    // 模擬錄音完成並生成一則新靈感膠囊
     _showRecordingCompletedDialog();
   }
 
   void _showRecordingCompletedDialog() {
+    final l10n = AppLocalizations.of(context)!;
     final provider = Provider.of<CapsuleProvider>(context, listen: false);
+    final monetization = Provider.of<MonetizationProvider>(context, listen: false);
     final isDark = provider.isDarkMode;
+
+    final hasQuota = monetization.consumeQuota();
+    if (!hasQuota) {
+      ProModal.show(context);
+      return;
+    }
 
     showModalBottomSheet(
       context: context,
@@ -64,8 +104,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ),
       builder: (ctx) {
         final titleController = TextEditingController(text: '快速語音靈感膠囊');
-        final transcriptController = TextEditingController(text: '今天下午要確認墨水屏調色盤對比度，並測試音訊錄音擴散波紋反饋。');
-        final tagController = TextEditingController(text: '靈感, 待辦');
+        final transcriptController = TextEditingController(text: '確認墨水屏調色盤、多國語言切換與 AdMob 商業化變現架構。');
+        final tagController = TextEditingController(text: '靈感, PRO');
 
         return Padding(
           padding: EdgeInsets.only(
@@ -93,7 +133,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       ),
                       const SizedBox(width: 10),
                       Text(
-                        '語音轉化完成',
+                        l10n.voiceConversionDone,
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -110,7 +150,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               TextField(
                 controller: titleController,
                 decoration: InputDecoration(
-                  labelText: '膠囊標題',
+                  labelText: l10n.capsuleTitleLabel,
                   labelStyle: const TextStyle(fontSize: 14),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   border: OutlineInputBorder(
@@ -123,7 +163,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 controller: transcriptController,
                 maxLines: 3,
                 decoration: InputDecoration(
-                  labelText: '語音轉譯內容',
+                  labelText: l10n.rawTranscriptLabel,
                   labelStyle: const TextStyle(fontSize: 14),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   border: OutlineInputBorder(
@@ -135,7 +175,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               TextField(
                 controller: tagController,
                 decoration: InputDecoration(
-                  labelText: '標籤 (逗號分隔)',
+                  labelText: l10n.tagsLabel,
                   labelStyle: const TextStyle(fontSize: 14),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   border: OutlineInputBorder(
@@ -167,14 +207,14 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       title: titleController.text.trim().isEmpty ? '語音記錄' : titleController.text.trim(),
                       rawTranscript: transcriptController.text.trim(),
                       summary: transcriptController.text.trim(),
-                      actionItems: ['確認錄音項目', '回顧筆記重點'],
-                      tags: tags.isEmpty ? ['語音靈感'] : tags,
+                      actionItems: ['確認錄音便籤項目', '檢視行動摘要'],
+                      tags: tags.isEmpty ? ['語音'] : tags,
                     );
                     Navigator.pop(ctx);
                   },
-                  child: const Text(
-                    '儲存為膠囊便籤',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                  child: Text(
+                    l10n.saveAsNote,
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
@@ -185,25 +225,67 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
-  String _formatDateChinese(DateTime date) {
-    const weekdays = ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'];
-    return DateFormat('M月d日 ').format(date) + weekdays[date.weekday - 1];
+  void _showLanguageSelector(BuildContext context) {
+    final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
+    final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: isDark ? AppTheme.nightCard : AppTheme.paperWhiteCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  child: Text(
+                    l10n.switchLanguage,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                ...LocaleProvider.supportedLocales.map((loc) {
+                  final isSelected = localeProvider.locale?.languageCode == loc.languageCode;
+                  return ListTile(
+                    title: Text(localeProvider.getLanguageName(loc.languageCode)),
+                    trailing: isSelected ? const Icon(Icons.check, color: AppTheme.inkBlue) : null,
+                    onTap: () {
+                      localeProvider.setLocale(loc);
+                      Navigator.pop(ctx);
+                    },
+                  );
+                }),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<CapsuleProvider>(context);
+    final l10n = AppLocalizations.of(context)!;
+    final capsuleProvider = Provider.of<CapsuleProvider>(context);
+    final monetization = Provider.of<MonetizationProvider>(context);
     final theme = Theme.of(context);
-    final isDark = provider.isDarkMode;
+    final isDark = capsuleProvider.isDarkMode;
     final now = DateTime.now();
+
+    final dateStr = DateFormat.yMMMEd(Localizations.localeOf(context).toString()).format(now);
 
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
-            // 頂部導航與狀態列
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+              padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -211,22 +293,22 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _formatDateChinese(now),
+                        dateStr,
                         style: theme.textTheme.labelSmall?.copyWith(
                           fontSize: 12,
-                          letterSpacing: 0.5,
+                          letterSpacing: 0.3,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Row(
                         children: [
                           Text(
-                            '膠囊靈感',
+                            l10n.appTitle,
                             style: theme.textTheme.headlineMedium?.copyWith(
                               fontWeight: FontWeight.w800,
                             ),
                           ),
-                          const SizedBox(width: 10),
+                          const SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
@@ -238,7 +320,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                               ),
                             ),
                             child: Text(
-                              ' 則待整理',
+                              l10n.capsulesPending(capsuleProvider.unprocessedCount),
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
@@ -253,7 +335,31 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   Row(
                     children: [
                       IconButton(
-                        tooltip: isDark ? '切換淺色墨水屏' : '切換墨黑夜間',
+                        tooltip: l10n.proUpgradeTitle,
+                        style: IconButton.styleFrom(
+                          backgroundColor: monetization.isPro
+                              ? const Color(0xFFD4AF37).withValues(alpha: 0.2)
+                              : (isDark ? AppTheme.nightHighlight : AppTheme.inkHighlightLight),
+                        ),
+                        icon: Icon(
+                          Icons.workspace_premium,
+                          size: 20,
+                          color: monetization.isPro ? const Color(0xFFD4AF37) : (isDark ? AppTheme.nightSecondary : AppTheme.inkSecondary),
+                        ),
+                        onPressed: () => ProModal.show(context),
+                      ),
+                      const SizedBox(width: 4),
+                      IconButton(
+                        tooltip: l10n.switchLanguage,
+                        style: IconButton.styleFrom(
+                          backgroundColor: isDark ? AppTheme.nightHighlight : AppTheme.inkHighlightLight,
+                        ),
+                        icon: const Icon(Icons.language, size: 20),
+                        onPressed: () => _showLanguageSelector(context),
+                      ),
+                      const SizedBox(width: 4),
+                      IconButton(
+                        tooltip: isDark ? l10n.lightModeToggle : l10n.darkModeToggle,
                         style: IconButton.styleFrom(
                           backgroundColor: isDark ? AppTheme.nightHighlight : AppTheme.inkHighlightLight,
                         ),
@@ -261,7 +367,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
                           size: 20,
                         ),
-                        onPressed: () => provider.toggleTheme(),
+                        onPressed: () => capsuleProvider.toggleTheme(),
                       ),
                     ],
                   ),
@@ -269,8 +375,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               ),
             ),
 
-            // 標籤篩選橫向滾動條
-            if (provider.allTags.isNotEmpty)
+            if (capsuleProvider.allTags.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6),
                 child: SizedBox(
@@ -281,17 +386,17 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     children: [
                       _buildTagFilterChip(
                         context,
-                        label: '全部 ()',
-                        isSelected: provider.selectedTag == null,
-                        onTap: () => provider.setSelectedTag(null),
+                        label: ' ()',
+                        isSelected: capsuleProvider.selectedTag == null,
+                        onTap: () => capsuleProvider.setSelectedTag(null),
                       ),
-                      ...provider.allTags.map(
+                      ...capsuleProvider.allTags.map(
                         (tag) => _buildTagFilterChip(
                           context,
                           label: tag,
-                          isSelected: provider.selectedTag == tag,
-                          onTap: () => provider.setSelectedTag(
-                            provider.selectedTag == tag ? null : tag,
+                          isSelected: capsuleProvider.selectedTag == tag,
+                          onTap: () => capsuleProvider.setSelectedTag(
+                            capsuleProvider.selectedTag == tag ? null : tag,
                           ),
                         ),
                       ),
@@ -300,33 +405,77 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 ),
               ),
 
-            const Divider(height: 12),
+            const Divider(height: 10),
 
-            // 中央便籤列表
             Expanded(
-              child: provider.isLoading
+              child: capsuleProvider.isLoading
                   ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
-                  : provider.filteredCapsules.isEmpty
-                      ? _buildEmptyState(context)
+                  : capsuleProvider.filteredCapsules.isEmpty
+                      ? _buildEmptyState(context, l10n)
                       : ListView.builder(
-                          padding: const EdgeInsets.fromLTRB(20, 8, 20, 110),
-                          itemCount: provider.filteredCapsules.length,
+                          padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
+                          itemCount: capsuleProvider.filteredCapsules.length,
                           itemBuilder: (context, index) {
-                            final capsule = provider.filteredCapsules[index];
-                            return _buildCapsuleCard(context, capsule, index)
+                            final capsule = capsuleProvider.filteredCapsules[index];
+                            return CapsuleCard(capsule: capsule)
                                 .animate()
                                 .fadeIn(duration: 300.ms, delay: (index * 40).ms)
                                 .slideY(begin: 0.05, end: 0, duration: 300.ms);
                           },
                         ),
             ),
+
+            if (!monetization.isPro)
+              _buildBannerAdContainer(context),
           ],
         ),
       ),
 
-      // 底部中央大型長按錄音膠囊按鈕
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: _buildRecordFloatingButton(context),
+      floatingActionButton: Padding(
+        padding: EdgeInsets.only(bottom: monetization.isPro ? 0 : 54),
+        child: RecordButton(
+          isRecording: _isRecording,
+          rippleController: _rippleController,
+          onRecordStart: _onRecordStart,
+          onRecordEnd: _onRecordEnd,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBannerAdContainer(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    if (_isBannerLoaded && _bannerAd != null) {
+      return Container(
+        width: _bannerAd!.size.width.toDouble(),
+        height: _bannerAd!.size.height.toDouble(),
+        alignment: Alignment.center,
+        child: AdWidget(ad: _bannerAd!),
+      );
+    }
+
+    return Container(
+      width: double.infinity,
+      height: 50,
+      color: isDark ? AppTheme.nightCard : AppTheme.inkHighlightLight.withValues(alpha: 0.5),
+      child: Center(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.ad_units, size: 14, color: isDark ? AppTheme.nightSecondary : AppTheme.inkSecondary),
+            const SizedBox(width: 6),
+            Text(
+              'AdMob Banner (PRO removes ads)',
+              style: TextStyle(
+                fontSize: 11,
+                color: isDark ? AppTheme.nightSecondary : AppTheme.inkSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -373,183 +522,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
-  Widget _buildCapsuleCard(BuildContext context, CapsuleModel capsule, int index) {
-    final provider = Provider.of<CapsuleProvider>(context, listen: false);
-    final theme = Theme.of(context);
-    final isDark = provider.isDarkMode;
-    final timeStr = DateFormat('MM/dd HH:mm').format(capsule.createdAt);
-
-    return Dismissible(
-      key: Key(capsule.id),
-      direction: DismissDirection.endToStart,
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
-        margin: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.red.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: const Icon(Icons.delete_outline, color: Colors.red),
-      ),
-      onDismissed: (_) => provider.deleteCapsule(capsule.id),
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 7),
-        decoration: BoxDecoration(
-          color: isDark ? AppTheme.nightCard : AppTheme.paperWhiteCard,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: capsule.isProcessed
-                ? (isDark ? AppTheme.nightBorder.withValues(alpha: 0.5) : AppTheme.inkBorderLight.withValues(alpha: 0.6))
-                : (isDark ? const Color(0xFF4A6572) : AppTheme.inkBlue.withValues(alpha: 0.35)),
-            width: capsule.isProcessed ? 1.0 : 1.4,
-          ),
-          boxShadow: isDark
-              ? null
-              : [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.02),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 卡片標頭列
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          capsule.title,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            decoration: capsule.isProcessed ? TextDecoration.lineThrough : null,
-                            color: capsule.isProcessed
-                                ? (isDark ? AppTheme.nightSecondary : AppTheme.inkSecondary)
-                                : (isDark ? AppTheme.nightText : AppTheme.inkBlack),
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          timeStr,
-                          style: theme.textTheme.labelSmall?.copyWith(fontSize: 11),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    iconSize: 22,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                    tooltip: capsule.isProcessed ? '標記為未整理' : '標記為已整理',
-                    icon: Icon(
-                      capsule.isProcessed ? Icons.check_circle : Icons.radio_button_unchecked,
-                      color: capsule.isProcessed
-                          ? (isDark ? const Color(0xFF6B8CAE) : AppTheme.inkBlue)
-                          : (isDark ? AppTheme.nightSecondary : AppTheme.inkSecondary),
-                    ),
-                    onPressed: () => provider.toggleProcessed(capsule.id),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 10),
-
-              // 摘要 / 原文
-              Text(
-                capsule.summary.isNotEmpty ? capsule.summary : capsule.rawTranscript,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: isDark ? AppTheme.nightText.withValues(alpha: 0.85) : AppTheme.inkBlack.withValues(alpha: 0.85),
-                  fontSize: 13.5,
-                  height: 1.45,
-                ),
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-              ),
-
-              // 行動項目（若有）
-              if (capsule.actionItems.isNotEmpty) ...[
-                const SizedBox(height: 10),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: isDark ? AppTheme.nightHighlight : AppTheme.inkHighlightLight.withValues(alpha: 0.7),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    children: capsule.actionItems
-                        .take(2)
-                        .map(
-                          (item) => Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 2),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.arrow_right_alt,
-                                  size: 14,
-                                  color: isDark ? AppTheme.nightSecondary : AppTheme.inkSecondary,
-                                ),
-                                const SizedBox(width: 4),
-                                Expanded(
-                                  child: Text(
-                                    item,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: isDark ? AppTheme.nightText : AppTheme.inkBlack,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        )
-                        .toList(),
-                  ),
-                ),
-              ],
-
-              // 標籤 Chip
-              if (capsule.tags.isNotEmpty) ...[
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 4,
-                  children: capsule.tags.map((tag) {
-                    return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: isDark ? AppTheme.nightHighlight : AppTheme.inkHighlightLight,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        '#',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: isDark ? AppTheme.nightSecondary : AppTheme.inkSecondary,
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState(BuildContext context) {
+  Widget _buildEmptyState(BuildContext context, AppLocalizations l10n) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: Padding(
@@ -564,7 +537,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             ),
             const SizedBox(height: 16),
             Text(
-              '尚無靈感膠囊',
+              l10n.emptyCapsulesTitle,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -573,7 +546,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             ),
             const SizedBox(height: 6),
             Text(
-              '長按下方按鈕隨時記錄語音與想法',
+              l10n.emptyCapsulesSubtitle,
               style: TextStyle(
                 fontSize: 13,
                 color: isDark ? AppTheme.nightSecondary : AppTheme.inkSecondary,
@@ -582,135 +555,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildRecordFloatingButton(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (_isRecording)
-          Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-            decoration: BoxDecoration(
-              color: isDark ? AppTheme.nightCard : Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: isDark ? AppTheme.nightBorder : AppTheme.inkBorderLight,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    color: Colors.redAccent,
-                    shape: BoxShape.circle,
-                  ),
-                ).animate(onPlay: (controller) => controller.repeat(reverse: true)).scale(
-                      begin: const Offset(0.8, 0.8),
-                      end: const Offset(1.4, 1.4),
-                      duration: 600.ms,
-                    ),
-                const SizedBox(width: 8),
-                Text(
-                  '正在聆聽錄音中... 鬆開即完成',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? AppTheme.nightText : AppTheme.inkBlack,
-                  ),
-                ),
-              ],
-            ),
-          ).animate().fadeIn(duration: 200.ms).slideY(begin: 0.2, end: 0),
-
-        // 長按按鈕與微動效外環波紋
-        Stack(
-          alignment: Alignment.center,
-          children: [
-            // 動態外擴波紋
-            if (_isRecording)
-              AnimatedBuilder(
-                animation: _rippleController,
-                builder: (context, child) {
-                  final value = _rippleController.value;
-                  return Container(
-                    width: 72 + (value * 50),
-                    height: 72 + (value * 50),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: (isDark ? const Color(0xFF6B8CAE) : AppTheme.inkBlue)
-                            .withValues(alpha: (1.0 - value).clamp(0.0, 1.0)),
-                        width: 2.0,
-                      ),
-                    ),
-                  );
-                },
-              ),
-
-            // 主膠囊按鈕
-            GestureDetector(
-              onLongPressStart: (_) => _onRecordStart(),
-              onLongPressEnd: (_) => _onRecordEnd(),
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Text('請長按按鈕進行語音錄製'),
-                    duration: const Duration(seconds: 2),
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
-                );
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: _isRecording ? 76 : 68,
-                height: _isRecording ? 76 : 68,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: _isRecording
-                      ? (isDark ? const Color(0xFF8FA8BF) : AppTheme.inkBlue)
-                      : (isDark ? AppTheme.nightCard : AppTheme.paperWhiteCard),
-                  border: Border.all(
-                    color: isDark ? const Color(0xFF4A6572) : AppTheme.inkBlue,
-                    width: 2.2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: (isDark ? Colors.black : AppTheme.inkBlue).withValues(alpha: 0.18),
-                      blurRadius: 16,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: Center(
-                  child: Icon(
-                    _isRecording ? Icons.mic : Icons.mic_none_outlined,
-                    size: _isRecording ? 34 : 30,
-                    color: _isRecording
-                        ? Colors.white
-                        : (isDark ? AppTheme.nightText : AppTheme.inkBlue),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
     );
   }
 }

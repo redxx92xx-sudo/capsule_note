@@ -1,0 +1,46 @@
+{
+  "@@locale": "en",
+  "appTitle": "Capsule Note",
+  "capsulesPending": "{count, plural, =0{All Caught Up} =1{1 Pending} other{{count} Pending}}",
+  "@capsulesPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pressToRecord": "Hold button to record note",
+  "recordingListening": "Listening... Release to complete",
+  "tapToRecordHint": "Press and hold the button to record voice",
+  "filterAll": "All",
+  "emptyCapsulesTitle": "No Capsule Notes Yet",
+  "emptyCapsulesSubtitle": "Hold the bottom button to capture thoughts anytime",
+  "saveAsNote": "Save Capsule Note",
+  "voiceConversionDone": "Voice Processed",
+  "capsuleTitleLabel": "Capsule Title",
+  "rawTranscriptLabel": "Raw Transcript",
+  "tagsLabel": "Tags (comma separated)",
+  "proUpgradeTitle": "Upgrade to Capsule PRO",
+  "proBadge": "PRO",
+  "proSubtitle": "Unlock unlimited AI summaries and ad-free experience",
+  "proFeature1": "100% Ad-Free Clean Ink Interface",
+  "proFeature2": "Unlimited AI Voice Summaries & Action Items",
+  "proFeature3": "Advanced Markdown & Audio Export",
+  "unlockRewardAd": "Watch Ad for +3 AI Quotas",
+  "upgradeToProButton": "Unlock PRO Lifetime (.99)",
+  "restorePurchases": "Restore Purchases",
+  "quotaRemaining": "Daily AI Quotas: {count}",
+  "@quotaRemaining": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "rewardSuccess": "Reward earned: +3 AI Quotas added!",
+  "switchLanguage": "Language",
+  "darkModeToggle": "Toggle Dark Mode",
+  "lightModeToggle": "Toggle Light Mode",
+  "markAsDone": "Mark as organized",
+  "markAsPending": "Mark as pending"
+}
