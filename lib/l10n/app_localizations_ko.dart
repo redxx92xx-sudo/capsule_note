@@ -88,7 +88,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get switchLanguage => '언어 변경';
 
   @override
-  String get darkModeToggle => '다克 모드로 전환';
+  String get darkModeToggle => '다크 모드로 전환';
 
   @override
   String get lightModeToggle => '라이트 모드로 전환';
@@ -133,61 +133,14 @@ class AppLocalizationsKo extends AppLocalizations {
   String get audioRecordTitle => '음성 녹음 데이터';
 
   @override
-  String get dailyDigest => '일일 다이제스트';
-
-  @override
   String get dailyDigestTitle => '오늘의 영감 다이제스트';
 
   @override
-  String get digestEmptyTitle => '오늘 기록된 캡슐이 없습니다';
+  String get exportModalTitle => '내보내기 형식 선택';
 
   @override
-  String get digestEmptySubtitle => '음성을 녹음하면 일일 다이제스트가 자동으로 생성됩니다';
+  String get exportSuccess => '성공적으로 복사되었습니다!';
 
   @override
-  String get keySummariesHeader => '주요 요약';
-
-  @override
-  String get pendingActionItemsHeader => '미완료 작업 목록';
-
-  @override
-  String get tagDistributionHeader => '태그 분포';
-
-  @override
-  String get copyDigestMarkdown => '다이제스트 Markdown 복사';
-
-  @override
-  String get export => '내보내기';
-
-  @override
-  String get exportCapsule => '캡슐 내보내기';
-
-  @override
-  String get exportDigest => '다이제스트 내보내기';
-
-  @override
-  String get exportFormat => '내보내기 형식';
-
-  @override
-  String get formatMarkdown => 'Markdown (.md)';
-
-  @override
-  String get formatPlainText => '일반 텍스트 (.txt)';
-
-  @override
-  String get formatNotion => 'Notion 호환 형식';
-
-  @override
-  String get watchAdToUnlockExport => '광고 시청 후 전체 내보내기 잠금 해제';
-
-  @override
-  String get exportSuccess => '클립보드로 성공적으로 내보냈습니다!';
-
-  @override
-  String get speechCleanerActive => '음성 정제 완료';
-
-  @override
-  String todayStats(int count) {
-    return '오늘: $count개';
-  }
+  String get speechCleanedBadge => '정제 완료';
 }

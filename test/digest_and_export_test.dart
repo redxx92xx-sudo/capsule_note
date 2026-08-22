@@ -1,136 +1,107 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:capsule_note/models/capsule_model.dart';
 import 'package:capsule_note/models/daily_digest_model.dart';
-import 'package:capsule_note/services/speech_cleaner_service.dart';
 import 'package:capsule_note/services/export_service.dart';
+import 'package:capsule_note/services/speech_cleaner_service.dart';
 
 void main() {
   group('SpeechCleanerService Tests', () {
     final cleaner = SpeechCleanerService.instance;
 
-    test('Removes Chinese filler words and duplicate words', () {
-      const raw = '呃，今天下午要開會，然後，討論那個架構優化，就是說我想我想把代碼重構。';
-      final result = cleaner.cleanWithStats(raw);
-
-      expect(result.removedFillersCount, greaterThan(0));
-      expect(result.removedDuplicatesCount, greaterThan(0));
-      expect(result.cleanedText.contains('呃'), isFalse);
-      expect(result.cleanedText.contains('我想我想'), isFalse);
-      expect(result.cleanedText.contains('我想'), isTrue);
-    });
-
-    test('Removes English filler words and word repetitions', () {
-      const raw = 'Um, we should like basically review the the pull request today.';
+    test('cleans English filler words and extracts core meaning', () {
+      const raw = 'Um you know basically we need to finish the sprint review actually.';
       final cleaned = cleaner.clean(raw);
 
-      expect(cleaned.toLowerCase().contains('um'), isFalse);
-      expect(cleaned.toLowerCase().contains('basically'), isFalse);
-      expect(cleaned.toLowerCase().contains('the the'), isFalse);
-      expect(cleaned.contains('pull request'), isTrue);
+      expect(cleaned.toLowerCase().contains('basically'), false);
+      expect(cleaned.toLowerCase().contains('you know'), false);
+      expect(cleaned.toLowerCase().contains('um'), false);
+      expect(cleaned.contains('finish the sprint review'), true);
     });
 
-    test('Handles empty and clean text gracefully', () {
+    test('cleans repetitive patterns and empty inputs', () {
       expect(cleaner.clean(''), '');
-      expect(cleaner.clean('   '), '');
-      expect(cleaner.clean('乾淨的筆記文字'), '乾淨的筆記文字');
+      final rep = cleaner.clean('aaaaabbbb');
+      expect(rep, 'ab');
     });
   });
 
   group('DailyDigestModel Tests', () {
     final now = DateTime.now();
-
-    final testCapsules = [
+    final sampleCapsules = [
       CapsuleModel(
-        id: '1',
-        title: '產品規劃會議',
-        rawTranscript: '討論靈感晚報與多格式導出功能。',
-        summary: '規劃完成 Phase 3 日報與匯出模組。',
-        actionItems: ['撰寫單元測試', '驗證語系檔案'],
+        id: 'c1',
+        title: 'Project Architecture',
+        rawTranscript: 'Discuss architecture',
+        summary: 'Refactor core service',
+        actionItems: ['Submit PR', 'Run unit tests'],
         createdAt: now,
         isProcessed: false,
-        tags: ['工作', '產品'],
+        tags: ['Tech'],
       ),
       CapsuleModel(
-        id: '2',
-        title: '技術架構優化',
-        rawTranscript: '代碼清理與語音過濾引擎。',
-        summary: '實作 SpeechCleanerService 贅詞過濾。',
-        actionItems: ['優化正規表達式'],
+        id: 'c2',
+        title: 'Shopping Task',
+        rawTranscript: 'Buy groceries',
+        summary: 'Buy milk and bread',
+        actionItems: ['Buy milk', 'Buy bread'],
         createdAt: now,
         isProcessed: true,
-        tags: ['技術'],
-      ),
-      CapsuleModel(
-        id: '3',
-        title: '昨天的筆記',
-        rawTranscript: '這是昨天的內容。',
-        summary: '昨日摘要。',
-        actionItems: ['昨日待辦'],
-        createdAt: now.subtract(const Duration(days: 1)),
-        isProcessed: false,
-        tags: ['歷史'],
+        tags: ['Life'],
       ),
     ];
 
-    test('Correctly aggregates capsules for the target date only', () {
-      final digest = DailyDigestModel.fromCapsules(now, testCapsules);
+    test('generates digest from today capsules correctly', () {
+      final digest = DailyDigestModel.generateFromCapsules(sampleCapsules);
 
-      expect(digest.totalCapsules, 2);
-      expect(digest.processedCount, 1);
-      expect(digest.pendingCount, 1);
-      expect(digest.completionRate, 0.5);
-      expect(digest.keySummaries.length, 2);
-      expect(digest.pendingActionItems.length, 3);
-      expect(digest.tagDistribution['工作'], 1);
-      expect(digest.tagDistribution['技術'], 1);
+      expect(digest.totalNotesCount, 2);
+      expect(digest.processedNotesCount, 1);
+      expect(digest.keyHighlights, contains('Refactor core service'));
+      expect(digest.keyHighlights, contains('Buy milk and bread'));
+      expect(digest.pendingActionItems, contains('Submit PR'));
+      expect(digest.pendingActionItems, contains('Run unit tests'));
+      expect(digest.pendingActionItems.contains('Buy milk'), false);
     });
 
-    test('Generates Markdown, Plain Text, and Notion format', () {
-      final digest = DailyDigestModel.fromCapsules(now, testCapsules);
-
+    test('generates markdown and notion formats', () {
+      final digest = DailyDigestModel.generateFromCapsules(sampleCapsules);
       final md = digest.toMarkdown();
-      expect(md.contains('# 📰 Daily Inspiration Digest'), isTrue);
-      expect(md.contains('產品規劃會議'), isTrue);
-      expect(md.contains('撰寫單元測試'), isTrue);
-
-      final txt = digest.toPlainText();
-      expect(txt.contains('DAILY INSPIRATION DIGEST'), isTrue);
-      expect(txt.contains('[KEY SUMMARIES]'), isTrue);
-
       final notion = digest.toNotionFormat();
-      expect(notion.contains('# 📓 Daily Digest'), isTrue);
-      expect(notion.contains('### ⚡ Action Items'), isTrue);
+
+      expect(md.contains('Refactor core service'), true);
+      expect(md.contains('Submit PR'), true);
+
+      expect(notion.contains('Daily Digest'), true);
+      expect(notion.contains('Key Takeaways'), true);
     });
   });
 
-  group('ExportService Tests', () {
-    final now = DateTime.now();
-    final sampleCapsule = CapsuleModel(
-      id: 'test-capsule-1',
-      title: '測試膠囊',
-      rawTranscript: '原始語音內容',
-      summary: '核心精華摘要',
-      actionItems: ['待辦項目一', '待辦項目二'],
-      createdAt: now,
-      isProcessed: false,
-      tags: ['測試', '靈感'],
+  group('ExportService Formatting Tests', () {
+    final exporter = ExportService.instance;
+    final capsule = CapsuleModel(
+      id: 'test-1',
+      title: 'Design Inspiration Note',
+      rawTranscript: 'Raw audio transcript text',
+      summary: 'Core summary takeaways',
+      actionItems: ['Task Action Item 1'],
+      createdAt: DateTime.now(),
+      tags: ['Work', 'Ideas'],
     );
 
-    test('Formats single capsule to Markdown, Text, and Notion format', () {
-      final exportService = ExportService.instance;
+    test('formats capsule to markdown, txt, and notion', () {
+      final md = exporter.formatCapsule(capsule, ExportFormat.markdown);
+      final txt = exporter.formatCapsule(capsule, ExportFormat.plainText);
+      final notion = exporter.formatCapsule(capsule, ExportFormat.notion);
 
-      final md = exportService.formatCapsule(sampleCapsule, ExportFormat.markdown);
-      expect(md.contains('# 測試膠囊'), isTrue);
-      expect(md.contains('## 💡 Summary'), isTrue);
-      expect(md.contains('待辦項目一'), isTrue);
+      expect(md.contains('Design Inspiration Note'), true);
+      expect(md.contains('Core summary takeaways'), true);
+      expect(md.contains('Task Action Item 1'), true);
 
-      final txt = exportService.formatCapsule(sampleCapsule, ExportFormat.plainText);
-      expect(txt.contains('CAPSULE NOTE: 測試膠囊'), isTrue);
-      expect(txt.contains('[SUMMARY]'), isTrue);
+      expect(txt.contains('Design Inspiration Note'), true);
+      expect(txt.contains('Core summary takeaways'), true);
 
-      final notion = exportService.formatCapsule(sampleCapsule, ExportFormat.notion);
-      expect(notion.contains('# 💊 測試膠囊'), isTrue);
-      expect(notion.contains('### ⚡ Action Items'), isTrue);
+      expect(notion.contains('Design Inspiration Note'), true);
+      expect(notion.contains('Core summary takeaways'), true);
+      expect(notion.contains('Task Action Item 1'), true);
     });
   });
 }

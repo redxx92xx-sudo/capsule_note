@@ -5,10 +5,10 @@ import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import '../services/ad_service.dart';
 import '../services/audio_record_service.dart';
+import '../services/speech_cleaner_service.dart';
 import '../services/capsule_provider.dart';
 import '../services/locale_provider.dart';
 import '../services/monetization_provider.dart';
-import '../services/speech_cleaner_service.dart';
 import '../theme/app_theme.dart';
 import 'daily_digest_screen.dart';
 import 'widgets/capsule_card.dart';
@@ -161,7 +161,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         const Icon(Icons.auto_awesome, size: 12, color: AppTheme.inkBlue),
                         const SizedBox(width: 4),
                         Text(
-                          l10n.speechCleanerActive,
+                          l10n.speechCleanedBadge,
                           style: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
@@ -384,6 +384,22 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           color: monetization.isPro ? const Color(0xFFD4AF37) : (isDark ? AppTheme.nightSecondary : AppTheme.inkSecondary),
                         ),
                         onPressed: () => ProModal.show(context),
+                      ),
+                      const SizedBox(width: 4),
+                      IconButton(
+                        tooltip: '今日靈感晚報',
+                        style: IconButton.styleFrom(
+                          backgroundColor: isDark ? AppTheme.nightHighlight : AppTheme.inkHighlightLight,
+                        ),
+                        icon: const Icon(Icons.auto_stories, size: 20),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const DailyDigestScreen(),
+                            ),
+                          );
+                        },
                       ),
                       const SizedBox(width: 4),
                       IconButton(

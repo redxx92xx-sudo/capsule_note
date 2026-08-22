@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
@@ -89,132 +90,99 @@ class _CapsuleDetailScreenState extends State<CapsuleDetailScreen> {
     provider.updateCapsule(updated);
   }
 
-  void _showExportMenu() {
+  void _copyAsMarkdown() {
     final l10n = AppLocalizations.of(context)!;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final timeStr = DateFormat('yyyy-MM-dd HH:mm').format(widget.capsule.createdAt);
+    final buffer = StringBuffer();
 
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: isDark ? AppTheme.nightCard : AppTheme.paperWhiteCard,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    final title = _titleController.text.trim();
+    final tags = _tagsController.text.trim();
+    final summary = _summaryController.text.trim();
+    final transcript = _transcriptController.text.trim();
+
+    buffer.writeln('# $title');
+    buffer.writeln('📅 **建立時間**：$timeStr');
+    if (tags.isNotEmpty) {
+      buffer.writeln('🏷️ **標籤**：$tags');
+    }
+    buffer.writeln();
+    buffer.writeln('## 💡 核心摘要');
+    buffer.writeln(summary);
+    buffer.writeln();
+    if (_actionItems.isNotEmpty) {
+      buffer.writeln('## ✅ 行動清單');
+      for (final item in _actionItems) {
+        buffer.writeln('- [ ] $item');
+      }
+      buffer.writeln();
+    }
+    if (transcript.isNotEmpty) {
+      buffer.writeln('## 🎙️ 語音轉譯原文');
+      buffer.writeln('> $transcript');
+    }
+
+    Clipboard.setData(ClipboardData(text: buffer.toString()));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(l10n.copyMarkdownSuccess),
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
       ),
-      builder: (ctx) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                  child: Text(
-                    l10n.exportFormat,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                ...ExportFormat.values.map((fmt) {
-                  return ListTile(
-                    leading: Icon(
-                      fmt == ExportFormat.markdown
-                          ? Icons.code
-                          : (fmt == ExportFormat.plainText
-                              ? Icons.text_snippet_outlined
-                              : Icons.description_outlined),
-                      color: AppTheme.inkBlue,
-                    ),
-                    title: Text(fmt.label),
-                    onTap: () {
-                      Navigator.pop(ctx);
-                      _saveChanges();
-                      final currentCapsule = widget.capsule.copyWith(
-                        title: _titleController.text.trim(),
-                        summary: _summaryController.text.trim(),
-                        rawTranscript: _transcriptController.text.trim(),
-                        actionItems: _actionItems,
-                        isProcessed: _isProcessed,
-                      );
-                      final content = ExportService.instance.formatCapsule(currentCapsule, fmt);
-                      ExportService.instance.handleExportWithMonetization(
-                        context: context,
-                        content: content,
-                        title: currentCapsule.title,
-                        format: fmt,
-                        successMessage: l10n.exportSuccess,
-                      );
-                    },
-                  );
-                }),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 
-  void _deleteCapsule() async {
-    final l10n = AppLocalizations.of(context)!;
+  void _deleteCapsule() {
     final provider = Provider.of<CapsuleProvider>(context, listen: false);
-
-    final confirm = await showDialog<bool>(
+    showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(l10n.deleteCapsuleTitle),
-        content: Text(l10n.deleteCapsuleMessage),
+        title: const Text('刪除膠囊'),
+        content: const Text('確定要永久刪除此靈感便籤嗎？'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.cancel),
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('取消'),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.confirmDelete, style: const TextStyle(color: Colors.white)),
+          TextButton(
+            onPressed: () {
+              provider.deleteCapsule(widget.capsule.id);
+              Navigator.pop(ctx);
+              Navigator.pop(context);
+            },
+            child: const Text('確認刪除', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
     );
-
-    if (confirm == true) {
-      provider.deleteCapsule(widget.capsule.id);
-      if (mounted) Navigator.pop(context);
-    }
   }
 
-  void _showAddActionDialog() {
-    final l10n = AppLocalizations.of(context)!;
-    final textController = TextEditingController();
-
+  void _addNewActionItem() {
+    final controller = TextEditingController();
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(l10n.addNewAction),
+        title: const Text('新增行動項目'),
         content: TextField(
-          controller: textController,
+          controller: controller,
           autofocus: true,
-          decoration: InputDecoration(
-            hintText: l10n.addActionHint,
-          ),
+          decoration: const InputDecoration(hintText: '輸入待辦或執行事項...'),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(l10n.cancel),
+            child: const Text('取消'),
           ),
           ElevatedButton(
             onPressed: () {
-              final text = textController.text.trim();
-              if (text.isNotEmpty) {
+              if (controller.text.trim().isNotEmpty) {
                 setState(() {
-                  _actionItems.add(text);
+                  _actionItems.add(controller.text.trim());
                 });
                 _saveChanges();
               }
               Navigator.pop(ctx);
             },
-            child: Text(l10n.addAction),
+            child: const Text('添加'),
           ),
         ],
       ),
@@ -223,12 +191,9 @@ class _CapsuleDetailScreenState extends State<CapsuleDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final dateStr = DateFormat.yMMMEd(Localizations.localeOf(context).toString())
-        .add_jm()
-        .format(widget.capsule.createdAt);
+    final timeStr = DateFormat('yyyy-MM-dd HH:mm').format(widget.capsule.createdAt);
 
     return PopScope(
       onPopInvokedWithResult: (didPop, result) {
@@ -236,203 +201,194 @@ class _CapsuleDetailScreenState extends State<CapsuleDetailScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(l10n.capsuleDetailTitle),
+          title: const Text('便籤詳情'),
           actions: [
             IconButton(
-              tooltip: l10n.exportCapsule,
-              icon: const Icon(Icons.ios_share_rounded, size: 20),
-              onPressed: _showExportMenu,
-            ),
-            IconButton(
-              tooltip: _isProcessed ? l10n.markAsPending : l10n.markAsDone,
-              icon: Icon(
-                _isProcessed ? Icons.check_circle : Icons.radio_button_unchecked,
-                color: _isProcessed ? AppTheme.inkBlue : null,
-              ),
+              tooltip: '多格式匯出',
+              icon: const Icon(Icons.ios_share_outlined),
               onPressed: () {
-                setState(() => _isProcessed = !_isProcessed);
                 _saveChanges();
+                ExportService.instance.showExportModal(context, capsule: widget.capsule);
               },
             ),
             IconButton(
-              tooltip: l10n.deleteCapsuleTitle,
-              icon: const Icon(Icons.delete_outline, color: Colors.red),
+              tooltip: '複製 Markdown 格式',
+              icon: const Icon(Icons.copy_all_outlined),
+              onPressed: _copyAsMarkdown,
+            ),
+            IconButton(
+              tooltip: '刪除膠囊',
+              icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
               onPressed: _deleteCapsule,
             ),
-            const SizedBox(width: 8),
           ],
         ),
-        body: SafeArea(
-          child: ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            children: [
-              Text(
-                dateStr,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  fontSize: 12,
-                  color: isDark ? AppTheme.nightSecondary : AppTheme.inkSecondary,
-                ),
+        body: ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          children: [
+            TextField(
+              controller: _titleController,
+              onChanged: (_) => _saveChanges(),
+              style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+              decoration: const InputDecoration(
+                border: InputBorder.none,
+                hintText: '輸入便籤標題...',
               ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: _titleController,
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.5,
+            ),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  timeStr,
+                  style: theme.textTheme.labelSmall?.copyWith(fontSize: 12),
                 ),
-                decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  hintText: '標題...',
+                FilterChip(
+                  label: Text(_isProcessed ? '已整理' : '待整理'),
+                  selected: _isProcessed,
+                  onSelected: (val) {
+                    setState(() => _isProcessed = val);
+                    _saveChanges();
+                  },
                 ),
-                onChanged: (_) => _saveChanges(),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _tagsController,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: isDark ? AppTheme.nightSecondary : AppTheme.inkSecondary,
-                ),
-                decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  hintText: '標籤 (逗號分隔)...',
-                ),
-                onChanged: (_) => _saveChanges(),
-              ),
-              const SizedBox(height: 16),
-              if (widget.capsule.audioPath != null) ...[
-                _buildAudioPlayerCard(isDark),
-                const SizedBox(height: 20),
               ],
-              _buildSectionHeader('💡 提煉重點摘要'),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: isDark ? AppTheme.nightCard : AppTheme.paperWhiteCard,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: isDark ? AppTheme.nightBorder : AppTheme.inkBorderLight,
-                  ),
-                ),
-                child: TextField(
-                  controller: _summaryController,
-                  maxLines: null,
-                  style: const TextStyle(fontSize: 15, height: 1.5),
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                    hintText: '摘要...',
-                  ),
-                  onChanged: (_) => _saveChanges(),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _buildSectionHeader('📌 行動清單'),
-                  IconButton(
-                    icon: const Icon(Icons.add_circle_outline, size: 20),
-                    onPressed: _showAddActionDialog,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                decoration: BoxDecoration(
-                  color: isDark ? AppTheme.nightCard : AppTheme.paperWhiteCard,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: isDark ? AppTheme.nightBorder : AppTheme.inkBorderLight,
-                  ),
-                ),
-                child: _actionItems.isEmpty
-                    ? Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Text(
-                          l10n.noActionItemsHint,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: isDark ? AppTheme.nightSecondary : AppTheme.inkSecondary,
-                          ),
-                        ),
-                      )
-                    : Column(
-                        children: _actionItems.asMap().entries.map((entry) {
-                          final idx = entry.key;
-                          final text = entry.value;
-                          return ListTile(
-                            leading: const Icon(Icons.check_box_outline_blank, size: 20),
-                            title: Text(text, style: const TextStyle(fontSize: 14)),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.close, size: 16),
-                              onPressed: () {
-                                setState(() {
-                                  _actionItems.removeAt(idx);
-                                });
-                                _saveChanges();
-                              },
-                            ),
-                          );
-                        }).toList(),
-                      ),
-              ),
-              const SizedBox(height: 24),
-              _buildSectionHeader('🎙️ 語音轉錄原文'),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: isDark ? AppTheme.nightCard : AppTheme.paperWhiteCard,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: isDark ? AppTheme.nightBorder : AppTheme.inkBorderLight,
-                  ),
-                ),
-                child: TextField(
-                  controller: _transcriptController,
-                  maxLines: null,
-                  style: TextStyle(
-                    fontSize: 14,
-                    height: 1.4,
-                    color: isDark ? AppTheme.nightSecondary : AppTheme.inkSecondary,
-                  ),
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                    hintText: '原始語音逐字稿...',
-                  ),
-                  onChanged: (_) => _saveChanges(),
-                ),
-              ),
-              const SizedBox(height: 40),
+            ),
+            const Divider(height: 24),
+            if (widget.capsule.audioPath != null) ...[
+              _buildAudioPlayerCard(context),
+              const SizedBox(height: 16),
             ],
-          ),
+            _buildSectionHeader(context, Icons.lightbulb_outline, '💡 AI 核心摘要'),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: isDark ? AppTheme.nightCard : AppTheme.paperWhiteCard,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: isDark ? AppTheme.nightBorder : AppTheme.inkBorderLight,
+                ),
+              ),
+              child: TextField(
+                controller: _summaryController,
+                maxLines: null,
+                onChanged: (_) => _saveChanges(),
+                style: theme.textTheme.bodyLarge,
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  hintText: '輸入重點摘要...',
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildSectionHeader(context, Icons.check_circle_outline, '✅ 行動項目清單'),
+                IconButton(
+                  icon: const Icon(Icons.add_circle_outline, size: 20),
+                  onPressed: _addNewActionItem,
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            if (_actionItems.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  '暫無行動項目，點擊右上角「+」新增',
+                  style: theme.textTheme.bodyMedium,
+                ),
+              )
+            else
+              ...List.generate(_actionItems.length, (index) {
+                return Card(
+                  margin: const EdgeInsets.symmetric(vertical: 4),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                    leading: const Icon(Icons.arrow_right_alt, color: AppTheme.inkBlue),
+                    title: Text(_actionItems[index]),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.remove_circle_outline, size: 18, color: Colors.redAccent),
+                      onPressed: () {
+                        setState(() {
+                          _actionItems.removeAt(index);
+                        });
+                        _saveChanges();
+                      },
+                    ),
+                  ),
+                );
+              }),
+            const SizedBox(height: 20),
+            _buildSectionHeader(context, Icons.mic_none, '🎙️ 語音轉譯原文'),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: isDark ? AppTheme.nightHighlight : AppTheme.inkHighlightLight.withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: TextField(
+                controller: _transcriptController,
+                maxLines: null,
+                onChanged: (_) => _saveChanges(),
+                style: theme.textTheme.bodyMedium?.copyWith(height: 1.4),
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  hintText: '原始轉譯文字內容...',
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            _buildSectionHeader(context, Icons.tag, '🏷️ 分類標籤'),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _tagsController,
+              onChanged: (_) => _saveChanges(),
+              decoration: InputDecoration(
+                hintText: '標籤（以逗號分隔）',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              ),
+            ),
+            const SizedBox(height: 40),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildSectionHeader(String title) {
-    return Text(
-      title,
-      style: const TextStyle(
-        fontSize: 15,
-        fontWeight: FontWeight.w700,
-        letterSpacing: -0.2,
-      ),
+  Widget _buildSectionHeader(BuildContext context, IconData icon, String title) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: AppTheme.inkBlue),
+        const SizedBox(width: 6),
+        Text(
+          title,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+        ),
+      ],
     );
   }
 
-  Widget _buildAudioPlayerCard(bool isDark) {
-    final l10n = AppLocalizations.of(context)!;
+  Widget _buildAudioPlayerCard(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final audio = AudioRecordService.instance;
+    final path = widget.capsule.audioPath!;
+
+    final currentSeconds = _currentPosition.inSeconds;
+    final totalSeconds = _totalDuration.inSeconds > 0 ? _totalDuration.inSeconds : 1;
+
+    final curMin = _currentPosition.inMinutes.toString();
+    final curSec = (_currentPosition.inSeconds % 60).toString().padLeft(2, '0');
+    final totMin = _totalDuration.inMinutes.toString();
+    final totSec = (_totalDuration.inSeconds % 60).toString().padLeft(2, '0');
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: isDark ? AppTheme.nightHighlight : AppTheme.inkHighlightLight,
+        color: isDark ? AppTheme.nightCard : AppTheme.paperWhiteCard,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isDark ? AppTheme.nightBorder : AppTheme.inkBorderLight,
@@ -442,7 +398,7 @@ class _CapsuleDetailScreenState extends State<CapsuleDetailScreen> {
         children: [
           Row(
             children: [
-              IconButton(
+              IconButton.filled(
                 style: IconButton.styleFrom(
                   backgroundColor: AppTheme.inkBlue,
                   foregroundColor: Colors.white,
@@ -452,7 +408,7 @@ class _CapsuleDetailScreenState extends State<CapsuleDetailScreen> {
                   if (_isPlaying) {
                     audio.pauseAudio();
                   } else {
-                    audio.playAudio(widget.capsule.audioPath!);
+                    audio.playAudio(path);
                   }
                 },
               ),
@@ -461,16 +417,21 @@ class _CapsuleDetailScreenState extends State<CapsuleDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      l10n.audioRecordTitle,
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                    const Text(
+                      '語音錄音記錄',
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${_formatDuration(_currentPosition)} / ${_formatDuration(_totalDuration)}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isDark ? AppTheme.nightSecondary : AppTheme.inkSecondary,
+                    SliderTheme(
+                      data: SliderTheme.of(context).copyWith(
+                        trackHeight: 3,
+                        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                      ),
+                      child: Slider(
+                        value: currentSeconds.toDouble().clamp(0.0, totalSeconds.toDouble()),
+                        max: totalSeconds.toDouble(),
+                        onChanged: (val) {
+                          audio.seekAudio(Duration(seconds: val.toInt()));
+                        },
                       ),
                     ),
                   ],
@@ -478,25 +439,24 @@ class _CapsuleDetailScreenState extends State<CapsuleDetailScreen> {
               ),
             ],
           ),
-          if (_totalDuration.inMilliseconds > 0)
-            Slider(
-              value: _currentPosition.inMilliseconds
-                  .clamp(0, _totalDuration.inMilliseconds)
-                  .toDouble(),
-              max: _totalDuration.inMilliseconds.toDouble(),
-              activeColor: AppTheme.inkBlue,
-              onChanged: (val) {
-                audio.seekAudio(Duration(milliseconds: val.toInt()));
-              },
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '$curMin:$curSec',
+                  style: const TextStyle(fontSize: 11),
+                ),
+                Text(
+                  '$totMin:$totSec',
+                  style: const TextStyle(fontSize: 11),
+                ),
+              ],
             ),
+          ),
         ],
       ),
     );
-  }
-
-  String _formatDuration(Duration d) {
-    final mins = d.inMinutes.toString().padLeft(2, '0');
-    final secs = (d.inSeconds % 60).toString().padLeft(2, '0');
-    return '$mins:$secs';
   }
 }

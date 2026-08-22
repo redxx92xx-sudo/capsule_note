@@ -342,119 +342,29 @@ abstract class AppLocalizations {
   /// **'Voice Recording'**
   String get audioRecordTitle;
 
-  /// No description provided for @dailyDigest.
-  ///
-  /// In en, this message translates to:
-  /// **'Daily Digest'**
-  String get dailyDigest;
-
   /// No description provided for @dailyDigestTitle.
   ///
   /// In en, this message translates to:
-  /// **'Daily Inspiration Digest'**
+  /// **'Daily Digest'**
   String get dailyDigestTitle;
 
-  /// No description provided for @digestEmptyTitle.
+  /// No description provided for @exportModalTitle.
   ///
   /// In en, this message translates to:
-  /// **'No Capsules Recorded Today'**
-  String get digestEmptyTitle;
-
-  /// No description provided for @digestEmptySubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Hold the mic button to capture thoughts and generate your daily digest'**
-  String get digestEmptySubtitle;
-
-  /// No description provided for @keySummariesHeader.
-  ///
-  /// In en, this message translates to:
-  /// **'Key Summaries'**
-  String get keySummariesHeader;
-
-  /// No description provided for @pendingActionItemsHeader.
-  ///
-  /// In en, this message translates to:
-  /// **'Action Items To-Do'**
-  String get pendingActionItemsHeader;
-
-  /// No description provided for @tagDistributionHeader.
-  ///
-  /// In en, this message translates to:
-  /// **'Tag Distribution'**
-  String get tagDistributionHeader;
-
-  /// No description provided for @copyDigestMarkdown.
-  ///
-  /// In en, this message translates to:
-  /// **'Copy Digest (Markdown)'**
-  String get copyDigestMarkdown;
-
-  /// No description provided for @export.
-  ///
-  /// In en, this message translates to:
-  /// **'Export'**
-  String get export;
-
-  /// No description provided for @exportCapsule.
-  ///
-  /// In en, this message translates to:
-  /// **'Export Capsule'**
-  String get exportCapsule;
-
-  /// No description provided for @exportDigest.
-  ///
-  /// In en, this message translates to:
-  /// **'Export Digest'**
-  String get exportDigest;
-
-  /// No description provided for @exportFormat.
-  ///
-  /// In en, this message translates to:
-  /// **'Export Format'**
-  String get exportFormat;
-
-  /// No description provided for @formatMarkdown.
-  ///
-  /// In en, this message translates to:
-  /// **'Markdown (.md)'**
-  String get formatMarkdown;
-
-  /// No description provided for @formatPlainText.
-  ///
-  /// In en, this message translates to:
-  /// **'Plain Text (.txt)'**
-  String get formatPlainText;
-
-  /// No description provided for @formatNotion.
-  ///
-  /// In en, this message translates to:
-  /// **'Notion Compatible'**
-  String get formatNotion;
-
-  /// No description provided for @watchAdToUnlockExport.
-  ///
-  /// In en, this message translates to:
-  /// **'Watch Ad to Unlock Full Export'**
-  String get watchAdToUnlockExport;
+  /// **'Choose Export Format'**
+  String get exportModalTitle;
 
   /// No description provided for @exportSuccess.
   ///
   /// In en, this message translates to:
-  /// **'Exported successfully to clipboard!'**
+  /// **'Exported and copied to clipboard!'**
   String get exportSuccess;
 
-  /// No description provided for @speechCleanerActive.
+  /// No description provided for @speechCleanedBadge.
   ///
   /// In en, this message translates to:
-  /// **'Speech Cleaner Active'**
-  String get speechCleanerActive;
-
-  /// No description provided for @todayStats.
-  ///
-  /// In en, this message translates to:
-  /// **'Today: {count} Notes'**
-  String todayStats(int count);
+  /// **'Speech Cleaned'**
+  String get speechCleanedBadge;
 }
 
 class _AppLocalizationsDelegate

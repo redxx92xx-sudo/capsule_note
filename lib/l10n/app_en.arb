@@ -54,30 +54,8 @@
   "addAction": "Add",
   "noActionItemsHint": "No action items yet. Click + to add one.",
   "audioRecordTitle": "Voice Recording",
-  "dailyDigest": "Daily Digest",
-  "dailyDigestTitle": "Daily Inspiration Digest",
-  "digestEmptyTitle": "No Capsules Recorded Today",
-  "digestEmptySubtitle": "Hold the mic button to capture thoughts and generate your daily digest",
-  "keySummariesHeader": "Key Summaries",
-  "pendingActionItemsHeader": "Action Items To-Do",
-  "tagDistributionHeader": "Tag Distribution",
-  "copyDigestMarkdown": "Copy Digest (Markdown)",
-  "export": "Export",
-  "exportCapsule": "Export Capsule",
-  "exportDigest": "Export Digest",
-  "exportFormat": "Export Format",
-  "formatMarkdown": "Markdown (.md)",
-  "formatPlainText": "Plain Text (.txt)",
-  "formatNotion": "Notion Compatible",
-  "watchAdToUnlockExport": "Watch Ad to Unlock Full Export",
-  "exportSuccess": "Exported successfully to clipboard!",
-  "speechCleanerActive": "Speech Cleaner Active",
-  "todayStats": "Today: {count} Notes",
-  "@todayStats": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  }
+  "dailyDigestTitle": "Daily Digest",
+  "exportModalTitle": "Choose Export Format",
+  "exportSuccess": "Exported and copied to clipboard!",
+  "speechCleanedBadge": "Speech Cleaned"
 }

@@ -1,4 +1,6 @@
-﻿class AiSummaryResult {
+import 'speech_cleaner_service.dart';
+
+class AiSummaryResult {
   final String title;
   final String summary;
   final List<String> actionItems;
@@ -16,10 +18,9 @@ class AiSummaryService {
   static final AiSummaryService instance = AiSummaryService._internal();
   AiSummaryService._internal();
 
-  /// 結構化提煉原始語音文本
-  Future<AiSummaryResult> structureTranscript(String rawTranscript) async {
-    final text = rawTranscript.trim();
-    if (text.isEmpty) {
+  Future<AiSummaryResult> structureTranscript(String rawText) async {
+    final cleanedText = SpeechCleanerService.instance.clean(rawText);
+    if (cleanedText.isEmpty) {
       return const AiSummaryResult(
         title: '未命名靈感膠囊',
         summary: '（空白語音便籤）',
@@ -28,8 +29,7 @@ class AiSummaryService {
       );
     }
 
-    // 1. 產生摘要 (過濾贅詞並精煉)
-    final cleanedText = _cleanFillers(text);
+    // 1. 產生核心摘要
     final summary = _generateSummary(cleanedText);
 
     // 2. 提取行動項目 (Action Items)
@@ -49,21 +49,8 @@ class AiSummaryService {
     );
   }
 
-  String _cleanFillers(String input) {
-    final fillers = [
-      '那個', '就是說', '嗯...', '呃', '然後', '大概是', '基本上',
-      'you know', 'um', 'uh', 'like', 'well', 'basically'
-    ];
-    var result = input;
-    for (final f in fillers) {
-      result = result.replaceAll(f, '');
-    }
-    return result.replaceAll(RegExp(r'\s+'), ' ').trim();
-  }
-
   String _generateSummary(String text) {
     if (text.length <= 60) return text;
-    // 分句提煉
     final sentences = text.split(RegExp(r'[。！？\n\.\!\?]')).where((s) => s.trim().isNotEmpty).toList();
     if (sentences.isEmpty) return text;
     if (sentences.length == 1) return sentences.first.trim();
@@ -90,7 +77,6 @@ class AiSummaryService {
       }
     }
 
-    // 若未偵測到明確關鍵字，給予重點行動提取
     if (items.isEmpty) {
       if (text.length > 20) {
         items.add('回顧便籤重點內容');

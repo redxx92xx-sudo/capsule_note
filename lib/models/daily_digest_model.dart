@@ -1,220 +1,123 @@
+import 'package:intl/intl.dart';
 import 'capsule_model.dart';
-
-class PendingActionItem {
-  final String capsuleId;
-  final String capsuleTitle;
-  final String actionText;
-  final bool isCompleted;
-
-  const PendingActionItem({
-    required this.capsuleId,
-    required this.capsuleTitle,
-    required this.actionText,
-    this.isCompleted = false,
-  });
-}
 
 class DailyDigestModel {
   final DateTime date;
-  final List<CapsuleModel> capsules;
-  final int totalCapsules;
-  final int processedCount;
-  final int pendingCount;
-  final List<String> keySummaries;
-  final List<PendingActionItem> pendingActionItems;
-  final Map<String, int> tagDistribution;
+  final List<String> keyHighlights;
+  final List<String> pendingActionItems;
+  final int totalNotesCount;
+  final int processedNotesCount;
 
   const DailyDigestModel({
     required this.date,
-    required this.capsules,
-    required this.totalCapsules,
-    required this.processedCount,
-    required this.pendingCount,
-    required this.keySummaries,
+    required this.keyHighlights,
     required this.pendingActionItems,
-    required this.tagDistribution,
+    required this.totalNotesCount,
+    required this.processedNotesCount,
   });
 
-  double get completionRate =>
-      totalCapsules == 0 ? 1.0 : (processedCount / totalCapsules).clamp(0.0, 1.0);
+  factory DailyDigestModel.generateFromCapsules(List<CapsuleModel> capsules, {DateTime? targetDate}) {
+    return DailyDigestModel.fromCapsules(targetDate ?? DateTime.now(), capsules);
+  }
 
-  factory DailyDigestModel.fromCapsules(DateTime targetDate, List<CapsuleModel> allCapsules) {
-    final dayCapsules = allCapsules.where((c) {
-      return c.createdAt.year == targetDate.year &&
-          c.createdAt.month == targetDate.month &&
-          c.createdAt.day == targetDate.day;
-    }).toList()
-      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+  factory DailyDigestModel.fromCapsules(DateTime date, List<CapsuleModel> capsules) {
+    final todayCapsules = capsules.where((c) {
+      return c.createdAt.year == date.year &&
+          c.createdAt.month == date.month &&
+          c.createdAt.day == date.day;
+    }).toList();
 
-    final summaries = <String>[];
-    final actions = <PendingActionItem>[];
-    final tagsMap = <String, int>{};
+    final highlights = <String>[];
+    final pendingActions = <String>[];
     int processed = 0;
 
-    for (final capsule in dayCapsules) {
-      if (capsule.isProcessed) {
+    for (final c in todayCapsules) {
+      if (c.isProcessed) {
         processed++;
       }
-
-      if (capsule.summary.trim().isNotEmpty) {
-        summaries.add(capsule.summary.trim());
-      } else if (capsule.rawTranscript.trim().isNotEmpty) {
-        summaries.add(capsule.rawTranscript.trim());
+      final highlight = c.summary.isNotEmpty ? c.summary : c.title;
+      if (highlight.isNotEmpty && !highlights.contains(highlight)) {
+        highlights.add(highlight);
       }
 
-      for (final action in capsule.actionItems) {
-        if (action.trim().isNotEmpty) {
-          actions.add(
-            PendingActionItem(
-              capsuleId: capsule.id,
-              capsuleTitle: capsule.title.isNotEmpty ? capsule.title : 'Capsule',
-              actionText: action.trim(),
-              isCompleted: capsule.isProcessed,
-            ),
-          );
-        }
-      }
-
-      for (final tag in capsule.tags) {
-        if (tag.trim().isNotEmpty) {
-          tagsMap[tag.trim()] = (tagsMap[tag.trim()] ?? 0) + 1;
+      for (final item in c.actionItems) {
+        if (!c.isProcessed && !pendingActions.contains(item)) {
+          pendingActions.add(item);
         }
       }
     }
 
     return DailyDigestModel(
-      date: targetDate,
-      capsules: dayCapsules,
-      totalCapsules: dayCapsules.length,
-      processedCount: processed,
-      pendingCount: dayCapsules.length - processed,
-      keySummaries: summaries,
-      pendingActionItems: actions,
-      tagDistribution: tagsMap,
+      date: date,
+      keyHighlights: highlights,
+      pendingActionItems: pendingActions,
+      totalNotesCount: todayCapsules.length,
+      processedNotesCount: processed,
     );
   }
 
   String toMarkdown() {
+    final dateStr = DateFormat('yyyy-MM-dd').format(date);
     final buffer = StringBuffer();
-    final dateStr = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-
-    buffer.writeln('# 📰 Daily Inspiration Digest - $dateStr');
-    buffer.writeln();
-    buffer.writeln('> **Overview:** Total Capsules: $totalCapsules | Organized: $processedCount | Pending: $pendingCount | Progress: ${(completionRate * 100).toInt()}%');
+    buffer.writeln('# 📰 今日靈感晚報 ($dateStr)');
+    buffer.writeln('📊 **今日概況**：共 $totalNotesCount 則膠囊，已整理 $processedNotesCount 則');
     buffer.writeln();
 
-    buffer.writeln('## 💡 Key Summaries');
-    if (keySummaries.isEmpty) {
-      buffer.writeln('*No summaries recorded today.*');
+    buffer.writeln('## 💡 核心亮點摘要');
+    if (keyHighlights.isEmpty) {
+      buffer.writeln('- 今日暫無記錄');
     } else {
-      for (int i = 0; i < capsules.length; i++) {
-        final c = capsules[i];
-        final title = c.title.isNotEmpty ? c.title : 'Capsule #${i + 1}';
-        final text = c.summary.isNotEmpty ? c.summary : c.rawTranscript;
-        final timeStr = '${c.createdAt.hour.toString().padLeft(2, '0')}:${c.createdAt.minute.toString().padLeft(2, '0')}';
-        buffer.writeln('- **$title** *($timeStr)*: $text');
+      for (final h in keyHighlights) {
+        buffer.writeln('- $h');
       }
     }
     buffer.writeln();
 
-    buffer.writeln('## 📌 Action Items To-Do');
+    buffer.writeln('## ✅ 待辦與執行項目');
     if (pendingActionItems.isEmpty) {
-      buffer.writeln('*No action items for today.*');
+      buffer.writeln('- 所有行動清單已全部完成！');
     } else {
-      for (final item in pendingActionItems) {
-        final mark = item.isCompleted ? '[x]' : '[ ]';
-        buffer.writeln('- $mark ${item.actionText} *(from ${item.capsuleTitle})*');
+      for (final a in pendingActionItems) {
+        buffer.writeln('- [ ] $a');
       }
     }
-    buffer.writeln();
 
-    if (tagDistribution.isNotEmpty) {
-      buffer.writeln('## 🏷️ Topic Tags');
-      final tagsStr = tagDistribution.entries
-          .map((e) => '`#${e.key} (${e.value})`')
-          .join(' ');
-      buffer.writeln(tagsStr);
-      buffer.writeln();
-    }
-
-    buffer.writeln('---');
-    buffer.writeln('*Generated by Capsule Note*');
     return buffer.toString();
   }
 
   String toPlainText() {
+    final dateStr = DateFormat('yyyy-MM-dd').format(date);
     final buffer = StringBuffer();
-    final dateStr = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-
-    buffer.writeln('DAILY INSPIRATION DIGEST ($dateStr)');
-    buffer.writeln('========================================');
-    buffer.writeln('Total Notes: $totalCapsules | Completed: $processedCount | Pending: $pendingCount');
-    buffer.writeln();
-
-    buffer.writeln('[KEY SUMMARIES]');
-    if (keySummaries.isEmpty) {
-      buffer.writeln('No summaries recorded.');
-    } else {
-      for (int i = 0; i < capsules.length; i++) {
-        final c = capsules[i];
-        final title = c.title.isNotEmpty ? c.title : 'Note #${i + 1}';
-        final text = c.summary.isNotEmpty ? c.summary : c.rawTranscript;
-        buffer.writeln('• $title: $text');
-      }
+    buffer.writeln('【今日靈感晚報】$dateStr');
+    buffer.writeln('統計：共 $totalNotesCount 則膠囊 ($processedNotesCount 則已整理)');
+    buffer.writeln('------------------------');
+    buffer.writeln('【重點摘要】');
+    for (int i = 0; i < keyHighlights.length; i++) {
+      buffer.writeln('${i + 1}. ${keyHighlights[i]}');
     }
-    buffer.writeln();
-
-    buffer.writeln('[ACTION ITEMS]');
-    if (pendingActionItems.isEmpty) {
-      buffer.writeln('No pending actions.');
-    } else {
-      for (final item in pendingActionItems) {
-        final status = item.isCompleted ? '[DONE]' : '[TODO]';
-        buffer.writeln('$status ${item.actionText} (${item.capsuleTitle})');
-      }
+    buffer.writeln('------------------------');
+    buffer.writeln('【待辦事項】');
+    for (final a in pendingActionItems) {
+      buffer.writeln('□ $a');
     }
-    buffer.writeln();
-
-    if (tagDistribution.isNotEmpty) {
-      buffer.writeln('[TAGS]');
-      buffer.writeln(tagDistribution.keys.map((k) => '#$k').join(', '));
-      buffer.writeln();
-    }
-
     return buffer.toString();
   }
 
   String toNotionFormat() {
+    final dateStr = DateFormat('yyyy-MM-dd').format(date);
     final buffer = StringBuffer();
-    final dateStr = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-
-    buffer.writeln('# 📓 Daily Digest: $dateStr');
+    buffer.writeln('# 📅 $dateStr Daily Digest');
+    buffer.writeln('> 📊 Total Capsules: $totalNotesCount | Processed: $processedNotesCount');
     buffer.writeln();
-    buffer.writeln('> 💡 **Daily Pulse:** Today you captured $totalCapsules idea capsules. Completion Rate: ${(completionRate * 100).toInt()}%.');
-    buffer.writeln();
-    buffer.writeln('---');
-    buffer.writeln();
-
-    buffer.writeln('### 🧠 Key Takeaways & Summaries');
-    for (final c in capsules) {
-      final title = c.title.isNotEmpty ? c.title : 'Capsule';
-      final text = c.summary.isNotEmpty ? c.summary : c.rawTranscript;
-      final tags = c.tags.map((t) => '`$t`').join(' ');
-      buffer.writeln('▶ **$title** $tags');
-      buffer.writeln('  $text');
-      buffer.writeln();
-    }
-
-    buffer.writeln('### ⚡ Action Items');
-    for (final item in pendingActionItems) {
-      final check = item.isCompleted ? '[x]' : '[ ]';
-      buffer.writeln('- $check **${item.actionText}** *(Source: ${item.capsuleTitle})*');
+    buffer.writeln('### 💡 Key Takeaways');
+    for (final h in keyHighlights) {
+      buffer.writeln('- $h');
     }
     buffer.writeln();
-
-    buffer.writeln('---');
-    final tagsStr = tagDistribution.keys.map((k) => '`#$k`').join(' ');
-    buffer.writeln('🏷️ **Tags:** $tagsStr');
+    buffer.writeln('### 🎯 Action Items');
+    for (final a in pendingActionItems) {
+      buffer.writeln('- [ ] $a');
+    }
     return buffer.toString();
   }
 }

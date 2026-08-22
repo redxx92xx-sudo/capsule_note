@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import '../l10n/app_localizations.dart';
 import '../models/capsule_model.dart';
 import '../models/daily_digest_model.dart';
 import '../screens/widgets/pro_modal.dart';
+import '../theme/app_theme.dart';
 import 'ad_service.dart';
 import 'monetization_provider.dart';
 
@@ -23,16 +25,23 @@ class ExportService {
 
   /// 格式化單則膠囊
   String formatCapsule(CapsuleModel capsule, ExportFormat format) {
-    final dateStr = '${capsule.createdAt.year}-${capsule.createdAt.month.toString().padLeft(2, '0')}-${capsule.createdAt.day.toString().padLeft(2, '0')} ${capsule.createdAt.hour.toString().padLeft(2, '0')}:${capsule.createdAt.minute.toString().padLeft(2, '0')}';
+    final year = capsule.createdAt.year;
+    final month = capsule.createdAt.month.toString().padLeft(2, '0');
+    final day = capsule.createdAt.day.toString().padLeft(2, '0');
+    final hour = capsule.createdAt.hour.toString().padLeft(2, '0');
+    final minute = capsule.createdAt.minute.toString().padLeft(2, '0');
+    final dateStr = '$year-$month-$day $hour:$minute';
 
     switch (format) {
       case ExportFormat.markdown:
         final buffer = StringBuffer();
         buffer.writeln('# ${capsule.title}');
         buffer.writeln();
-        buffer.writeln('> **Created:** $dateStr | **Status:** ${capsule.isProcessed ? "Organized" : "Pending"}');
+        final statusStr = capsule.isProcessed ? 'Organized' : 'Pending';
+        buffer.writeln('> **Created:** $dateStr | **Status:** $statusStr');
         if (capsule.tags.isNotEmpty) {
-          buffer.writeln('> **Tags:** ${capsule.tags.map((t) => "`#$t`").join(" ")}');
+          final tagsStr = capsule.tags.map((t) => '`#$t`').join(' ');
+          buffer.writeln('> **Tags:** $tagsStr');
         }
         buffer.writeln();
         if (capsule.summary.isNotEmpty) {
@@ -81,7 +90,8 @@ class ExportService {
         buffer.writeln('# 💊 ${capsule.title}');
         buffer.writeln();
         buffer.writeln('> 🗓️ **Date:** $dateStr');
-        buffer.writeln('> 🏷️ **Tags:** ${capsule.tags.map((t) => "`$t`").join(" ")}');
+        final tagsStr = capsule.tags.map((t) => '`$t`').join(' ');
+        buffer.writeln('> 🏷️ **Tags:** $tagsStr');
         buffer.writeln();
         if (capsule.summary.isNotEmpty) {
           buffer.writeln('### 💡 Core Summary');
@@ -113,9 +123,83 @@ class ExportService {
     }
   }
 
-  /// 帶商業化門檻的匯出流程：
-  /// - PRO 用戶直接完成
-  /// - 免費用戶提示觀看 Rewarded Ad 廣告以解鎖單次匯出，或升級 PRO
+  /// 統一顯示匯出選單
+  void showExportModal(
+    BuildContext context, {
+    CapsuleModel? capsule,
+    DailyDigestModel? digest,
+  }) {
+    final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: isDark ? AppTheme.nightCard : AppTheme.paperWhiteCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  child: Text(
+                    l10n.exportModalTitle,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                ...ExportFormat.values.map((fmt) {
+                  return ListTile(
+                    leading: Icon(
+                      fmt == ExportFormat.markdown
+                          ? Icons.code
+                          : (fmt == ExportFormat.plainText
+                              ? Icons.text_snippet_outlined
+                              : Icons.description_outlined),
+                      color: AppTheme.inkBlue,
+                    ),
+                    title: Text(fmt.label),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      String content;
+                      String title;
+                      if (capsule != null) {
+                        content = formatCapsule(capsule, fmt);
+                        title = capsule.title;
+                      } else if (digest != null) {
+                        content = formatDigest(digest, fmt);
+                        final datePart = digest.date.toIso8601String().length >= 10
+                            ? digest.date.toIso8601String().substring(0, 10)
+                            : '';
+                        title = 'Daily Digest - $datePart';
+                      } else {
+                        return;
+                      }
+
+                      handleExportWithMonetization(
+                        context: context,
+                        content: content,
+                        title: title,
+                        format: fmt,
+                        successMessage: l10n.exportSuccess,
+                      );
+                    },
+                  );
+                }),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// 帶商業化門檻的匯出流程
   Future<bool> handleExportWithMonetization({
     required BuildContext context,
     required String content,
@@ -139,13 +223,12 @@ class ExportService {
       return true;
     }
 
-    // 免費用戶：彈出解鎖選項對話框
     if (!context.mounted) return false;
     final userChoice = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Row(
-          children: const [
+        title: const Row(
+          children: [
             Icon(Icons.file_download_outlined, size: 22),
             SizedBox(width: 8),
             Text('Export Note'),
@@ -203,7 +286,6 @@ class ExportService {
           }
         },
         onAdFailedToLoad: () async {
-          // 若廣告暫時無法載入，友好寬容允許一次匯出
           await _copyToClipboard(content);
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
