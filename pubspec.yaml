@@ -25,6 +25,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_native_splash: ^2.4.4
 
 flutter:
   uses-material-design: true
@@ -32,3 +33,12 @@ flutter:
 
 dependency_overrides:
   record_platform_interface: 1.2.0
+
+flutter_native_splash:
+  color: "#F9F9F8"
+  color_dark: "#121212"
+  image: assets/icon/splash_icon.png
+  image_dark: assets/icon/splash_icon.png
+  android: true
+  ios: true
+  web: false
