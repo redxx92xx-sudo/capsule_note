@@ -141,4 +141,64 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get audioRecordTitle => 'Voice Recording';
+
+  @override
+  String get dailyDigest => 'Daily Digest';
+
+  @override
+  String get dailyDigestTitle => 'Daily Inspiration Digest';
+
+  @override
+  String get digestEmptyTitle => 'No Capsules Recorded Today';
+
+  @override
+  String get digestEmptySubtitle =>
+      'Hold the mic button to capture thoughts and generate your daily digest';
+
+  @override
+  String get keySummariesHeader => 'Key Summaries';
+
+  @override
+  String get pendingActionItemsHeader => 'Action Items To-Do';
+
+  @override
+  String get tagDistributionHeader => 'Tag Distribution';
+
+  @override
+  String get copyDigestMarkdown => 'Copy Digest (Markdown)';
+
+  @override
+  String get export => 'Export';
+
+  @override
+  String get exportCapsule => 'Export Capsule';
+
+  @override
+  String get exportDigest => 'Export Digest';
+
+  @override
+  String get exportFormat => 'Export Format';
+
+  @override
+  String get formatMarkdown => 'Markdown (.md)';
+
+  @override
+  String get formatPlainText => 'Plain Text (.txt)';
+
+  @override
+  String get formatNotion => 'Notion Compatible';
+
+  @override
+  String get watchAdToUnlockExport => 'Watch Ad to Unlock Full Export';
+
+  @override
+  String get exportSuccess => 'Exported successfully to clipboard!';
+
+  @override
+  String get speechCleanerActive => 'Speech Cleaner Active';
+
+  @override
+  String todayStats(int count) {
+    return 'Today: $count Notes';
+  }
 }

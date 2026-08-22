@@ -131,4 +131,63 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get audioRecordTitle => '音声録音データ';
+
+  @override
+  String get dailyDigest => 'デイリーダイジェスト';
+
+  @override
+  String get dailyDigestTitle => '今日のエスピレーション夕刊';
+
+  @override
+  String get digestEmptyTitle => '本日記録されたカプセルはありません';
+
+  @override
+  String get digestEmptySubtitle => '音声を記録すると、デイリーダイジェストが自動生成されます';
+
+  @override
+  String get keySummariesHeader => '主な要約';
+
+  @override
+  String get pendingActionItemsHeader => 'アクションアイテム一覧';
+
+  @override
+  String get tagDistributionHeader => 'タグ分布';
+
+  @override
+  String get copyDigestMarkdown => 'ダイジェストをMarkdownでコピー';
+
+  @override
+  String get export => 'エクスポート';
+
+  @override
+  String get exportCapsule => 'カプセルをエクスポート';
+
+  @override
+  String get exportDigest => 'ダイジェストをエクスポート';
+
+  @override
+  String get exportFormat => 'エクスポート形式';
+
+  @override
+  String get formatMarkdown => 'Markdown (.md)';
+
+  @override
+  String get formatPlainText => 'プレーンテキスト (.txt)';
+
+  @override
+  String get formatNotion => 'Notion 互換形式';
+
+  @override
+  String get watchAdToUnlockExport => '広告を視聴してエクスポートを解除';
+
+  @override
+  String get exportSuccess => 'クリップボードにエクスポートしました！';
+
+  @override
+  String get speechCleanerActive => '音声クリーナー適用済み';
+
+  @override
+  String todayStats(int count) {
+    return '本日：$count件';
+  }
 }

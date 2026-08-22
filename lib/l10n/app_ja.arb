@@ -53,5 +53,31 @@
   "addActionHint": "タスクまたはアクションを入力...",
   "addAction": "追加",
   "noActionItemsHint": "アクション項目がありません。+ をクリックして追加してください。",
-  "audioRecordTitle": "音声録音データ"
+  "audioRecordTitle": "音声録音データ",
+  "dailyDigest": "デイリーダイジェスト",
+  "dailyDigestTitle": "今日のエスピレーション夕刊",
+  "digestEmptyTitle": "本日記録されたカプセルはありません",
+  "digestEmptySubtitle": "音声を記録すると、デイリーダイジェストが自動生成されます",
+  "keySummariesHeader": "主な要約",
+  "pendingActionItemsHeader": "アクションアイテム一覧",
+  "tagDistributionHeader": "タグ分布",
+  "copyDigestMarkdown": "ダイジェストをMarkdownでコピー",
+  "export": "エクスポート",
+  "exportCapsule": "カプセルをエクスポート",
+  "exportDigest": "ダイジェストをエクスポート",
+  "exportFormat": "エクスポート形式",
+  "formatMarkdown": "Markdown (.md)",
+  "formatPlainText": "プレーンテキスト (.txt)",
+  "formatNotion": "Notion 互換形式",
+  "watchAdToUnlockExport": "広告を視聴してエクスポートを解除",
+  "exportSuccess": "クリップボードにエクスポートしました！",
+  "speechCleanerActive": "音声クリーナー適用済み",
+  "todayStats": "本日：{count}件",
+  "@todayStats": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

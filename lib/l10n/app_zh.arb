@@ -53,5 +53,31 @@
   "addActionHint": "輸入待辦或執行事項...",
   "addAction": "添加",
   "noActionItemsHint": "暫無行動項目，點擊右上角「+」新增",
-  "audioRecordTitle": "語音錄音記錄"
+  "audioRecordTitle": "語音錄音記錄",
+  "dailyDigest": "今日晚報",
+  "dailyDigestTitle": "今日靈感晚報",
+  "digestEmptyTitle": "今日尚未記錄任何膠囊",
+  "digestEmptySubtitle": "長按底部按鈕記錄靈感，系統將自動為您彙整靈感晚報",
+  "keySummariesHeader": "精華重點摘要",
+  "pendingActionItemsHeader": "待辦行動清單",
+  "tagDistributionHeader": "主題標籤分佈",
+  "copyDigestMarkdown": "複製完整晚報 Markdown",
+  "export": "匯出",
+  "exportCapsule": "匯出膠囊便籤",
+  "exportDigest": "匯出靈感晚報",
+  "exportFormat": "匯出格式",
+  "formatMarkdown": "Markdown (.md)",
+  "formatPlainText": "純文字 (.txt)",
+  "formatNotion": "Notion 相容格式",
+  "watchAdToUnlockExport": "觀看激勵廣告解鎖本次完整匯出",
+  "exportSuccess": "已成功匯出至剪貼簿！",
+  "speechCleanerActive": "已智慧清洗口語贅詞",
+  "todayStats": "今日已記錄 {count} 則",
+  "@todayStats": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

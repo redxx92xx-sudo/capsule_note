@@ -53,5 +53,31 @@
   "addActionHint": "할 일 또는 실행 항목 입력...",
   "addAction": "추가",
   "noActionItemsHint": "액션 항목이 없습니다. + 버튼을 눌러 추가하세요.",
-  "audioRecordTitle": "음성 녹음 데이터"
+  "audioRecordTitle": "음성 녹음 데이터",
+  "dailyDigest": "일일 다이제스트",
+  "dailyDigestTitle": "오늘의 영감 다이제스트",
+  "digestEmptyTitle": "오늘 기록된 캡슐이 없습니다",
+  "digestEmptySubtitle": "음성을 녹음하면 일일 다이제스트가 자동으로 생성됩니다",
+  "keySummariesHeader": "주요 요약",
+  "pendingActionItemsHeader": "미완료 작업 목록",
+  "tagDistributionHeader": "태그 분포",
+  "copyDigestMarkdown": "다이제스트 Markdown 복사",
+  "export": "내보내기",
+  "exportCapsule": "캡슐 내보내기",
+  "exportDigest": "다이제스트 내보내기",
+  "exportFormat": "내보내기 형식",
+  "formatMarkdown": "Markdown (.md)",
+  "formatPlainText": "일반 텍스트 (.txt)",
+  "formatNotion": "Notion 호환 형식",
+  "watchAdToUnlockExport": "광고 시청 후 전체 내보내기 잠금 해제",
+  "exportSuccess": "클립보드로 성공적으로 내보냈습니다!",
+  "speechCleanerActive": "음성 정제 완료",
+  "todayStats": "오늘: {count}개",
+  "@todayStats": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

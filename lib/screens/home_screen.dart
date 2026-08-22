@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -9,7 +8,9 @@ import '../services/audio_record_service.dart';
 import '../services/capsule_provider.dart';
 import '../services/locale_provider.dart';
 import '../services/monetization_provider.dart';
+import '../services/speech_cleaner_service.dart';
 import '../theme/app_theme.dart';
+import 'daily_digest_screen.dart';
 import 'widgets/capsule_card.dart';
 import 'widgets/pro_modal.dart';
 import 'widgets/record_button.dart';
@@ -101,6 +102,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       return;
     }
 
+    // 口語自動清洗示範預設文字
+    const rawDemo = '呃，今天下午要跟產品團隊開會，然後，討論那個語音模型的架構與效能優化。';
+    final cleanedDemo = SpeechCleanerService.instance.clean(rawDemo);
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -109,9 +114,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (ctx) {
-        final titleController = TextEditingController(text: '語音靈感膠囊');
-        final transcriptController = TextEditingController(text: '今天下午要確認墨水屏調色盤、多國語言切換與音訊錄製播放功能。');
-        final tagController = TextEditingController(text: '靈感, 待辦');
+        final titleController = TextEditingController(text: '語音錄音靈感');
+        final transcriptController = TextEditingController(text: cleanedDemo);
+        final tagController = TextEditingController(text: '靈感, 工作');
 
         return Padding(
           padding: EdgeInsets.only(
@@ -140,63 +145,70 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       const SizedBox(width: 10),
                       Text(
                         l10n.voiceConversionDone,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.close, size: 20),
-                    onPressed: () => Navigator.pop(ctx),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppTheme.inkBlue.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.auto_awesome, size: 12, color: AppTheme.inkBlue),
+                        const SizedBox(width: 4),
+                        Text(
+                          l10n.speechCleanerActive,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.inkBlue,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: titleController,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 decoration: InputDecoration(
                   labelText: l10n.capsuleTitleLabel,
-                  labelStyle: const TextStyle(fontSize: 14),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: transcriptController,
                 maxLines: 3,
+                style: const TextStyle(fontSize: 14),
                 decoration: InputDecoration(
                   labelText: l10n.rawTranscriptLabel,
-                  labelStyle: const TextStyle(fontSize: 14),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: tagController,
+                style: const TextStyle(fontSize: 14),
                 decoration: InputDecoration(
                   labelText: l10n.tagsLabel,
-                  labelStyle: const TextStyle(fontSize: 14),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
-                height: 48,
+                height: 50,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: isDark ? const Color(0xFF4A6572) : AppTheme.inkBlue,
-                    foregroundColor: Colors.white,
+                    backgroundColor: AppTheme.inkBlack,
+                    foregroundColor: AppTheme.paperWhite,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -341,6 +353,24 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   ),
                   Row(
                     children: [
+                      // 今日靈感晚報按鈕
+                      IconButton(
+                        key: const Key('daily_digest_header_btn'),
+                        tooltip: l10n.dailyDigestTitle,
+                        style: IconButton.styleFrom(
+                          backgroundColor: isDark ? AppTheme.nightHighlight : AppTheme.inkHighlightLight,
+                        ),
+                        icon: const Icon(Icons.auto_stories_outlined, size: 20, color: AppTheme.inkBlue),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const DailyDigestScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(width: 4),
                       IconButton(
                         tooltip: l10n.proUpgradeTitle,
                         style: IconButton.styleFrom(
@@ -381,186 +411,170 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 ],
               ),
             ),
-
-            if (capsuleProvider.allTags.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: SizedBox(
-                  height: 36,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    children: [
-                      _buildTagFilterChip(
-                        context,
-                        label: ' ()',
-                        isSelected: capsuleProvider.selectedTag == null,
-                        onTap: () => capsuleProvider.setSelectedTag(null),
-                      ),
-                      ...capsuleProvider.allTags.map(
-                        (tag) => _buildTagFilterChip(
-                          context,
-                          label: tag,
-                          isSelected: capsuleProvider.selectedTag == tag,
-                          onTap: () => capsuleProvider.setSelectedTag(
-                            capsuleProvider.selectedTag == tag ? null : tag,
-                          ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: isDark ? AppTheme.nightCard : AppTheme.paperWhiteCard,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isDark ? AppTheme.nightBorder : AppTheme.inkBorderLight,
                         ),
                       ),
-                    ],
+                      child: TextField(
+                        onChanged: (val) => capsuleProvider.setSearchQuery(val),
+                        style: const TextStyle(fontSize: 14),
+                        decoration: InputDecoration(
+                          hintText: l10n.tapToRecordHint,
+                          hintStyle: TextStyle(
+                            fontSize: 13,
+                            color: isDark ? AppTheme.nightSecondary : AppTheme.inkSecondary,
+                          ),
+                          prefixIcon: Icon(
+                            Icons.search,
+                            size: 18,
+                            color: isDark ? AppTheme.nightSecondary : AppTheme.inkSecondary,
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                        ),
+                      ),
+                    ),
                   ),
+                  const SizedBox(width: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isDark ? AppTheme.nightCard : AppTheme.paperWhiteCard,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isDark ? AppTheme.nightBorder : AppTheme.inkBorderLight,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.bolt,
+                          size: 16,
+                          color: monetization.isPro ? const Color(0xFFD4AF37) : AppTheme.inkBlue,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          monetization.isPro ? l10n.proBadge : '${monetization.remainingDailyQuota}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: monetization.isPro ? const Color(0xFFD4AF37) : AppTheme.inkBlue,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (capsuleProvider.allTags.isNotEmpty)
+              Container(
+                height: 38,
+                margin: const EdgeInsets.symmetric(vertical: 4),
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: FilterChip(
+                        label: Text(l10n.filterAll),
+                        selected: capsuleProvider.selectedTag == null,
+                        onSelected: (_) => capsuleProvider.setSelectedTag(null),
+                        backgroundColor: isDark ? AppTheme.nightCard : AppTheme.paperWhiteCard,
+                        selectedColor: isDark ? AppTheme.nightHighlight : AppTheme.inkHighlightLight,
+                        checkmarkColor: AppTheme.inkBlue,
+                        side: BorderSide(
+                          color: isDark ? AppTheme.nightBorder : AppTheme.inkBorderLight,
+                        ),
+                      ),
+                    ),
+                    ...capsuleProvider.allTags.map((tag) {
+                      final isSelected = capsuleProvider.selectedTag == tag;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: FilterChip(
+                          label: Text('#$tag'),
+                          selected: isSelected,
+                          onSelected: (_) {
+                            capsuleProvider.setSelectedTag(isSelected ? null : tag);
+                          },
+                          backgroundColor: isDark ? AppTheme.nightCard : AppTheme.paperWhiteCard,
+                          selectedColor: isDark ? AppTheme.nightHighlight : AppTheme.inkHighlightLight,
+                          checkmarkColor: AppTheme.inkBlue,
+                          side: BorderSide(
+                            color: isDark ? AppTheme.nightBorder : AppTheme.inkBorderLight,
+                          ),
+                        ),
+                      );
+                    }),
+                  ],
                 ),
               ),
-
-            const Divider(height: 10),
-
             Expanded(
               child: capsuleProvider.isLoading
                   ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
                   : capsuleProvider.filteredCapsules.isEmpty
-                      ? _buildEmptyState(context, l10n)
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.note_alt_outlined,
+                                size: 56,
+                                color: isDark ? AppTheme.nightSecondary : AppTheme.inkSecondary,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                l10n.emptyCapsulesTitle,
+                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                l10n.emptyCapsulesSubtitle,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: isDark ? AppTheme.nightSecondary : AppTheme.inkSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
                       : ListView.builder(
                           padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
                           itemCount: capsuleProvider.filteredCapsules.length,
                           itemBuilder: (context, index) {
                             final capsule = capsuleProvider.filteredCapsules[index];
-                            return CapsuleCard(capsule: capsule)
-                                .animate()
-                                .fadeIn(duration: 300.ms, delay: (index * 40).ms)
-                                .slideY(begin: 0.05, end: 0, duration: 300.ms);
+                            return CapsuleCard(capsule: capsule);
                           },
                         ),
             ),
-
-            if (!monetization.isPro)
-              _buildBannerAdContainer(context),
+            if (_isBannerLoaded && _bannerAd != null)
+              Container(
+                alignment: Alignment.center,
+                width: _bannerAd!.size.width.toDouble(),
+                height: _bannerAd!.size.height.toDouble(),
+                child: AdWidget(ad: _bannerAd!),
+              ),
           ],
         ),
       ),
-
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: Padding(
-        padding: EdgeInsets.only(bottom: monetization.isPro ? 0 : 54),
-        child: RecordButton(
-          isRecording: _isRecording,
-          rippleController: _rippleController,
-          onRecordStart: _onRecordStart,
-          onRecordEnd: _onRecordEnd,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBannerAdContainer(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    if (_isBannerLoaded && _bannerAd != null) {
-      return Container(
-        width: _bannerAd!.size.width.toDouble(),
-        height: _bannerAd!.size.height.toDouble(),
-        alignment: Alignment.center,
-        child: AdWidget(ad: _bannerAd!),
-      );
-    }
-
-    return Container(
-      width: double.infinity,
-      height: 50,
-      color: isDark ? AppTheme.nightCard : AppTheme.inkHighlightLight.withValues(alpha: 0.5),
-      child: Center(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.ad_units, size: 14, color: isDark ? AppTheme.nightSecondary : AppTheme.inkSecondary),
-            const SizedBox(width: 6),
-            Text(
-              'AdMob Banner (PRO removes ads)',
-              style: TextStyle(
-                fontSize: 11,
-                color: isDark ? AppTheme.nightSecondary : AppTheme.inkSecondary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTagFilterChip(
-    BuildContext context, {
-    required String label,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? (isDark ? const Color(0xFF4A6572) : AppTheme.inkBlue)
-                : (isDark ? AppTheme.nightCard : AppTheme.paperWhiteCard),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: isSelected
-                  ? Colors.transparent
-                  : (isDark ? AppTheme.nightBorder : AppTheme.inkBorderLight),
-              width: 1,
-            ),
-          ),
-          child: Center(
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                color: isSelected
-                    ? Colors.white
-                    : (isDark ? AppTheme.nightText : AppTheme.inkBlack),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState(BuildContext context, AppLocalizations l10n) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.draw_outlined,
-              size: 56,
-              color: isDark ? AppTheme.nightSecondary : AppTheme.inkSecondary.withValues(alpha: 0.5),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              l10n.emptyCapsulesTitle,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: isDark ? AppTheme.nightText : AppTheme.inkBlack,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              l10n.emptyCapsulesSubtitle,
-              style: TextStyle(
-                fontSize: 13,
-                color: isDark ? AppTheme.nightSecondary : AppTheme.inkSecondary,
-              ),
-            ),
-          ],
-        ),
+      floatingActionButton: RecordButton(
+        isRecording: _isRecording,
+        rippleController: _rippleController,
+        onRecordStart: _onRecordStart,
+        onRecordEnd: _onRecordEnd,
       ),
     );
   }

@@ -131,4 +131,63 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get audioRecordTitle => '語音錄音記錄';
+
+  @override
+  String get dailyDigest => '今日晚報';
+
+  @override
+  String get dailyDigestTitle => '今日靈感晚報';
+
+  @override
+  String get digestEmptyTitle => '今日尚未記錄任何膠囊';
+
+  @override
+  String get digestEmptySubtitle => '長按底部按鈕記錄靈感，系統將自動為您彙整靈感晚報';
+
+  @override
+  String get keySummariesHeader => '精華重點摘要';
+
+  @override
+  String get pendingActionItemsHeader => '待辦行動清單';
+
+  @override
+  String get tagDistributionHeader => '主題標籤分佈';
+
+  @override
+  String get copyDigestMarkdown => '複製完整晚報 Markdown';
+
+  @override
+  String get export => '匯出';
+
+  @override
+  String get exportCapsule => '匯出膠囊便籤';
+
+  @override
+  String get exportDigest => '匯出靈感晚報';
+
+  @override
+  String get exportFormat => '匯出格式';
+
+  @override
+  String get formatMarkdown => 'Markdown (.md)';
+
+  @override
+  String get formatPlainText => '純文字 (.txt)';
+
+  @override
+  String get formatNotion => 'Notion 相容格式';
+
+  @override
+  String get watchAdToUnlockExport => '觀看激勵廣告解鎖本次完整匯出';
+
+  @override
+  String get exportSuccess => '已成功匯出至剪貼簿！';
+
+  @override
+  String get speechCleanerActive => '已智慧清洗口語贅詞';
+
+  @override
+  String todayStats(int count) {
+    return '今日已記錄 $count 則';
+  }
 }
