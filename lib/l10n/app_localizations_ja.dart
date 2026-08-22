@@ -98,4 +98,37 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get markAsPending => '未整理にする';
+
+  @override
+  String get copyMarkdownSuccess => 'Markdown形式でクリップボードにコピーしました！';
+
+  @override
+  String get capsuleDetailTitle => 'カプセル詳細';
+
+  @override
+  String get deleteCapsuleTitle => 'カプセルを削除';
+
+  @override
+  String get deleteCapsuleMessage => 'このカプセルノートを完全に削除してもよろしいですか？';
+
+  @override
+  String get cancel => 'キャンセル';
+
+  @override
+  String get confirmDelete => '削除する';
+
+  @override
+  String get addNewAction => 'アクション項目を追加';
+
+  @override
+  String get addActionHint => 'タスクまたはアクションを入力...';
+
+  @override
+  String get addAction => '追加';
+
+  @override
+  String get noActionItemsHint => 'アクション項目がありません。+ をクリックして追加してください。';
+
+  @override
+  String get audioRecordTitle => '音声録音データ';
 }

@@ -42,5 +42,16 @@
   "darkModeToggle": "切換墨黑夜間",
   "lightModeToggle": "切換紙質白模式",
   "markAsDone": "標記為已整理",
-  "markAsPending": "標記為未整理"
+  "markAsPending": "標記為未整理",
+  "copyMarkdownSuccess": "已複製為 Markdown 格式到剪貼簿！",
+  "capsuleDetailTitle": "便籤詳情",
+  "deleteCapsuleTitle": "刪除膠囊",
+  "deleteCapsuleMessage": "確定要永久刪除此靈感便籤嗎？",
+  "cancel": "取消",
+  "confirmDelete": "確認刪除",
+  "addNewAction": "新增行動項目",
+  "addActionHint": "輸入待辦或執行事項...",
+  "addAction": "添加",
+  "noActionItemsHint": "暫無行動項目，點擊右上角「+」新增",
+  "audioRecordTitle": "語音錄音記錄"
 }

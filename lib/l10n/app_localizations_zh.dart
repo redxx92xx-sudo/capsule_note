@@ -98,4 +98,37 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get markAsPending => '標記為未整理';
+
+  @override
+  String get copyMarkdownSuccess => '已複製為 Markdown 格式到剪貼簿！';
+
+  @override
+  String get capsuleDetailTitle => '便籤詳情';
+
+  @override
+  String get deleteCapsuleTitle => '刪除膠囊';
+
+  @override
+  String get deleteCapsuleMessage => '確定要永久刪除此靈感便籤嗎？';
+
+  @override
+  String get cancel => '取消';
+
+  @override
+  String get confirmDelete => '確認刪除';
+
+  @override
+  String get addNewAction => '新增行動項目';
+
+  @override
+  String get addActionHint => '輸入待辦或執行事項...';
+
+  @override
+  String get addAction => '添加';
+
+  @override
+  String get noActionItemsHint => '暫無行動項目，點擊右上角「+」新增';
+
+  @override
+  String get audioRecordTitle => '語音錄音記錄';
 }

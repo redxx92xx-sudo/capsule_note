@@ -275,6 +275,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Mark as pending'**
   String get markAsPending;
+
+  /// No description provided for @copyMarkdownSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to clipboard as Markdown format!'**
+  String get copyMarkdownSuccess;
+
+  /// No description provided for @capsuleDetailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Capsule Details'**
+  String get capsuleDetailTitle;
+
+  /// No description provided for @deleteCapsuleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Capsule'**
+  String get deleteCapsuleTitle;
+
+  /// No description provided for @deleteCapsuleMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to permanently delete this capsule note?'**
+  String get deleteCapsuleMessage;
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// No description provided for @confirmDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get confirmDelete;
+
+  /// No description provided for @addNewAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Action Item'**
+  String get addNewAction;
+
+  /// No description provided for @addActionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter action or task item...'**
+  String get addActionHint;
+
+  /// No description provided for @addAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get addAction;
+
+  /// No description provided for @noActionItemsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'No action items yet. Click + to add one.'**
+  String get noActionItemsHint;
+
+  /// No description provided for @audioRecordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice Recording'**
+  String get audioRecordTitle;
 }
 
 class _AppLocalizationsDelegate

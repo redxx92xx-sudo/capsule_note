@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import '../services/ad_service.dart';
+import '../services/audio_record_service.dart';
 import '../services/capsule_provider.dart';
 import '../services/locale_provider.dart';
 import '../services/monetization_provider.dart';
@@ -25,6 +26,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   late AnimationController _rippleController;
   BannerAd? _bannerAd;
   bool _isBannerLoaded = false;
+  String? _recordedAudioPath;
 
   @override
   void initState() {
@@ -65,14 +67,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     super.dispose();
   }
 
-  void _onRecordStart() {
+  Future<void> _onRecordStart() async {
     setState(() {
       _isRecording = true;
     });
     _rippleController.repeat();
+    _recordedAudioPath = await AudioRecordService.instance.startRecording();
   }
 
-  void _onRecordEnd() {
+  Future<void> _onRecordEnd() async {
     if (!_isRecording) return;
     setState(() {
       _isRecording = false;
@@ -80,10 +83,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     _rippleController.stop();
     _rippleController.reset();
 
-    _showRecordingCompletedDialog();
+    final path = await AudioRecordService.instance.stopRecording();
+    _recordedAudioPath = path ?? _recordedAudioPath;
+
+    _showRecordingCompletedDialog(_recordedAudioPath);
   }
 
-  void _showRecordingCompletedDialog() {
+  void _showRecordingCompletedDialog(String? audioPath) {
     final l10n = AppLocalizations.of(context)!;
     final provider = Provider.of<CapsuleProvider>(context, listen: false);
     final monetization = Provider.of<MonetizationProvider>(context, listen: false);
@@ -103,9 +109,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (ctx) {
-        final titleController = TextEditingController(text: '快速語音靈感膠囊');
-        final transcriptController = TextEditingController(text: '確認墨水屏調色盤、多國語言切換與 AdMob 商業化變現架構。');
-        final tagController = TextEditingController(text: '靈感, PRO');
+        final titleController = TextEditingController(text: '語音靈感膠囊');
+        final transcriptController = TextEditingController(text: '今天下午要確認墨水屏調色盤、多國語言切換與音訊錄製播放功能。');
+        final tagController = TextEditingController(text: '靈感, 待辦');
 
         return Padding(
           padding: EdgeInsets.only(
@@ -204,12 +210,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         .toList();
 
                     provider.addCapsule(
-                      title: titleController.text.trim().isEmpty ? '語音記錄' : titleController.text.trim(),
+                      title: titleController.text.trim(),
                       rawTranscript: transcriptController.text.trim(),
-                      summary: transcriptController.text.trim(),
-                      actionItems: ['確認錄音便籤項目', '檢視行動摘要'],
-                      tags: tags.isEmpty ? ['語音'] : tags,
+                      tags: tags.isEmpty ? ['靈感'] : tags,
+                      audioPath: audioPath,
                     );
+
+                    monetization.onCapsuleCreated();
                     Navigator.pop(ctx);
                   },
                   child: Text(

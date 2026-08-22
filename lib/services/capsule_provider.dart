@@ -2,6 +2,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import '../models/capsule_model.dart';
+import 'ai_summary_service.dart';
 
 class CapsuleProvider extends ChangeNotifier {
   static const String _storageKey = 'capsule_notes_data';
@@ -99,28 +100,45 @@ class CapsuleProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> addCapsule({
-    required String title,
+  Future<CapsuleModel> addCapsule({
+    String? title,
     required String rawTranscript,
-    String summary = '',
-    List<String> actionItems = const [],
-    List<String> tags = const [],
+    String? summary,
+    List<String>? actionItems,
+    List<String>? tags,
+    String? audioPath,
     bool isProcessed = false,
   }) async {
+    // 若無提供結構化欄位，自動透過 AI 提煉
+    String finalTitle = title ?? '';
+    String finalSummary = summary ?? '';
+    List<String> finalActions = actionItems ?? [];
+    List<String> finalTags = tags ?? [];
+
+    if (finalTitle.isEmpty || finalSummary.isEmpty || finalActions.isEmpty || finalTags.isEmpty) {
+      final aiResult = await AiSummaryService.instance.structureTranscript(rawTranscript);
+      if (finalTitle.isEmpty) finalTitle = aiResult.title;
+      if (finalSummary.isEmpty) finalSummary = aiResult.summary;
+      if (finalActions.isEmpty) finalActions = aiResult.actionItems;
+      if (finalTags.isEmpty) finalTags = aiResult.tags;
+    }
+
     final newCapsule = CapsuleModel(
       id: _uuid.v4(),
-      title: title,
+      title: finalTitle,
       rawTranscript: rawTranscript,
-      summary: summary,
-      actionItems: actionItems,
+      summary: finalSummary,
+      actionItems: finalActions,
       createdAt: DateTime.now(),
       isProcessed: isProcessed,
-      tags: tags,
+      tags: finalTags,
+      audioPath: audioPath,
     );
 
     _capsules.insert(0, newCapsule);
     notifyListeners();
     await _saveToPreferences();
+    return newCapsule;
   }
 
   Future<void> updateCapsule(CapsuleModel updated) async {
@@ -157,8 +175,8 @@ class CapsuleProvider extends ChangeNotifier {
         rawTranscript: '語音膠囊筆記：透過極簡墨水屏介面，隨時長按錄音記錄靈感，讓思緒化為清晰的行動便籤。',
         summary: '極簡墨水屏靈感膠囊筆記，長按底部按鈕即可快速紀錄語音並自動整理。',
         actionItems: [
-          '長按底部按鈕體驗錄音波紋動效',
-          '點擊卡片右上角標記處理狀態',
+          '長按底部按鈕體驗真實音訊錄音',
+          '點擊便籤卡片進入詳情與編輯頁',
           '點擊右上角切換深淺墨水屏主題'
         ],
         createdAt: now.subtract(const Duration(minutes: 15)),
@@ -176,7 +194,7 @@ class CapsuleProvider extends ChangeNotifier {
         ],
         createdAt: now.subtract(const Duration(hours: 3)),
         isProcessed: true,
-        tags: ['工作', 'AI規劃'],
+        tags: ['工作', '技術'],
       ),
     ];
   }

@@ -88,7 +88,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get switchLanguage => '언어 변경';
 
   @override
-  String get darkModeToggle => '다크 모드로 전환';
+  String get darkModeToggle => '다克 모드로 전환';
 
   @override
   String get lightModeToggle => '라이트 모드로 전환';
@@ -98,4 +98,37 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get markAsPending => '미정리로 표시';
+
+  @override
+  String get copyMarkdownSuccess => 'Markdown 형식으로 클립보드에 복사되었습니다!';
+
+  @override
+  String get capsuleDetailTitle => '캡슐 상세';
+
+  @override
+  String get deleteCapsuleTitle => '캡슐 삭제';
+
+  @override
+  String get deleteCapsuleMessage => '이 캡슐 노트를 영구적으로 삭제하시겠습니까?';
+
+  @override
+  String get cancel => '취소';
+
+  @override
+  String get confirmDelete => '삭제 확인';
+
+  @override
+  String get addNewAction => '액션 아이템 추가';
+
+  @override
+  String get addActionHint => '할 일 또는 실행 항목 입력...';
+
+  @override
+  String get addAction => '추가';
+
+  @override
+  String get noActionItemsHint => '액션 항목이 없습니다. + 버튼을 눌러 추가하세요.';
+
+  @override
+  String get audioRecordTitle => '음성 녹음 데이터';
 }

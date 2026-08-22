@@ -107,4 +107,38 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get markAsPending => 'Mark as pending';
+
+  @override
+  String get copyMarkdownSuccess => 'Copied to clipboard as Markdown format!';
+
+  @override
+  String get capsuleDetailTitle => 'Capsule Details';
+
+  @override
+  String get deleteCapsuleTitle => 'Delete Capsule';
+
+  @override
+  String get deleteCapsuleMessage =>
+      'Are you sure you want to permanently delete this capsule note?';
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get confirmDelete => 'Delete';
+
+  @override
+  String get addNewAction => 'Add Action Item';
+
+  @override
+  String get addActionHint => 'Enter action or task item...';
+
+  @override
+  String get addAction => 'Add';
+
+  @override
+  String get noActionItemsHint => 'No action items yet. Click + to add one.';
+
+  @override
+  String get audioRecordTitle => 'Voice Recording';
 }

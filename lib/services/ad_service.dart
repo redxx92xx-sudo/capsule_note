@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
@@ -87,7 +87,6 @@ class AdService {
     Function()? onAdFailedToLoad,
   }) {
     if (!isMobilePlatform) {
-      // 網頁端或桌面端模擬獎勵發放
       onUserEarnedReward(RewardItem(3, 'AI_QUOTA'));
       return;
     }
@@ -112,6 +111,37 @@ class AdService {
         onAdFailedToLoad: (error) {
           debugPrint('RewardedAd failed to load: ');
           if (onAdFailedToLoad != null) onAdFailedToLoad();
+        },
+      ),
+    );
+  }
+
+  void showInterstitialAd({Function()? onAdDismissed}) {
+    if (!isMobilePlatform) {
+      if (onAdDismissed != null) onAdDismissed();
+      return;
+    }
+
+    InterstitialAd.load(
+      adUnitId: interstitialAdUnitId,
+      request: const AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (ad) {
+          ad.fullScreenContentCallback = FullScreenContentCallback(
+            onAdDismissedFullScreenContent: (ad) {
+              ad.dispose();
+              if (onAdDismissed != null) onAdDismissed();
+            },
+            onAdFailedToShowFullScreenContent: (ad, error) {
+              ad.dispose();
+              if (onAdDismissed != null) onAdDismissed();
+            },
+          );
+          ad.show();
+        },
+        onAdFailedToLoad: (error) {
+          debugPrint('InterstitialAd failed to load: ');
+          if (onAdDismissed != null) onAdDismissed();
         },
       ),
     );

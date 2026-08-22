@@ -42,5 +42,16 @@
   "darkModeToggle": "Toggle Dark Mode",
   "lightModeToggle": "Toggle Light Mode",
   "markAsDone": "Mark as organized",
-  "markAsPending": "Mark as pending"
+  "markAsPending": "Mark as pending",
+  "copyMarkdownSuccess": "Copied to clipboard as Markdown format!",
+  "capsuleDetailTitle": "Capsule Details",
+  "deleteCapsuleTitle": "Delete Capsule",
+  "deleteCapsuleMessage": "Are you sure you want to permanently delete this capsule note?",
+  "cancel": "Cancel",
+  "confirmDelete": "Delete",
+  "addNewAction": "Add Action Item",
+  "addActionHint": "Enter action or task item...",
+  "addAction": "Add",
+  "noActionItemsHint": "No action items yet. Click + to add one.",
+  "audioRecordTitle": "Voice Recording"
 }

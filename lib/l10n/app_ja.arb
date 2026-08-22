@@ -42,5 +42,16 @@
   "darkModeToggle": "ダークモードに切り替え",
   "lightModeToggle": "ライトモードに切り替え",
   "markAsDone": "整理済みにする",
-  "markAsPending": "未整理にする"
+  "markAsPending": "未整理にする",
+  "copyMarkdownSuccess": "Markdown形式でクリップボードにコピーしました！",
+  "capsuleDetailTitle": "カプセル詳細",
+  "deleteCapsuleTitle": "カプセルを削除",
+  "deleteCapsuleMessage": "このカプセルノートを完全に削除してもよろしいですか？",
+  "cancel": "キャンセル",
+  "confirmDelete": "削除する",
+  "addNewAction": "アクション項目を追加",
+  "addActionHint": "タスクまたはアクションを入力...",
+  "addAction": "追加",
+  "noActionItemsHint": "アクション項目がありません。+ をクリックして追加してください。",
+  "audioRecordTitle": "音声録音データ"
 }

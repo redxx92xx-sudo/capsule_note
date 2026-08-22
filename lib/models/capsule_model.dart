@@ -9,6 +9,7 @@ class CapsuleModel {
   final DateTime createdAt;
   final bool isProcessed;
   final List<String> tags;
+  final String? audioPath;
 
   const CapsuleModel({
     required this.id,
@@ -19,6 +20,7 @@ class CapsuleModel {
     required this.createdAt,
     this.isProcessed = false,
     this.tags = const [],
+    this.audioPath,
   });
 
   CapsuleModel copyWith({
@@ -30,6 +32,7 @@ class CapsuleModel {
     DateTime? createdAt,
     bool? isProcessed,
     List<String>? tags,
+    String? audioPath,
   }) {
     return CapsuleModel(
       id: id ?? this.id,
@@ -40,6 +43,7 @@ class CapsuleModel {
       createdAt: createdAt ?? this.createdAt,
       isProcessed: isProcessed ?? this.isProcessed,
       tags: tags ?? this.tags,
+      audioPath: audioPath ?? this.audioPath,
     );
   }
 
@@ -53,6 +57,7 @@ class CapsuleModel {
       'createdAt': createdAt.toIso8601String(),
       'isProcessed': isProcessed,
       'tags': tags,
+      'audioPath': audioPath,
     };
   }
 
@@ -68,6 +73,7 @@ class CapsuleModel {
           : DateTime.now(),
       isProcessed: map['isProcessed'] as bool? ?? false,
       tags: List<String>.from(map['tags'] ?? const []),
+      audioPath: map['audioPath'] as String?,
     );
   }
 
@@ -78,7 +84,7 @@ class CapsuleModel {
 
   @override
   String toString() {
-    return 'CapsuleModel(id: , title: , isProcessed: , createdAt: )';
+    return 'CapsuleModel(id: , title: , isProcessed: , createdAt: , audioPath: )';
   }
 
   @override
