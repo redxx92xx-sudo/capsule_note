@@ -1,0 +1,13 @@
+flutter_native_splash:
+  color: "#F9F9F8"
+  color_dark: "#121212"
+  image: assets/icons/capsule_icon.png
+  image_dark: assets/icons/capsule_icon.png
+
+  android_12:
+    color: "#F9F9F8"
+    color_dark: "#121212"
+    image: assets/icons/capsule_icon.png
+    image_dark: assets/icons/capsule_icon.png
+
+  web: false
