@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 class AppTheme {
   // 色彩常數定義 (墨水屏 / E-ink 調色盤)

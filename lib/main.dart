@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 import 'l10n/app_localizations.dart';
 import 'screens/home_screen.dart';
@@ -12,15 +12,19 @@ import 'services/monetization_provider.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
-  final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
-  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+  WidgetsFlutterBinding.ensureInitialized();
+
+  try {
+    await initializeDateFormatting();
+  } catch (e) {
+    debugPrint('Date formatting init error: ');
+  }
 
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
 
-  // 異步非阻塞初始化廣告服務
   AdService.instance.initialize().catchError((e) {
     debugPrint('AdService init error: ');
   });
@@ -35,9 +39,6 @@ void main() async {
       child: const CapsuleNoteApp(),
     ),
   );
-
-  // 立即移除開屏遮罩進入主畫面
-  FlutterNativeSplash.remove();
 }
 
 class CapsuleNoteApp extends StatelessWidget {

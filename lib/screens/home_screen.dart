@@ -36,7 +36,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       vsync: this,
       duration: const Duration(milliseconds: 1600),
     );
-    _loadBannerAd();
+    WidgetsBinding.instance.addPostFrameCallback((_) { if (mounted) _loadBannerAd(); });
   }
 
   void _loadBannerAd() {
@@ -297,7 +297,16 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     final isDark = capsuleProvider.isDarkMode;
     final now = DateTime.now();
 
-    final dateStr = DateFormat.yMMMEd(Localizations.localeOf(context).toString()).format(now);
+    String dateStr;
+    try {
+      dateStr = DateFormat.yMMMEd(Localizations.localeOf(context).toString()).format(now);
+    } catch (_) {
+      try {
+        dateStr = DateFormat('yyyy/MM/dd').format(now);
+      } catch (_) {
+        dateStr = '//';
+      }
+    }
 
     return Scaffold(
       body: SafeArea(
