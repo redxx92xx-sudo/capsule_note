@@ -1,4 +1,4 @@
-﻿import 'dart:io';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
@@ -6,144 +6,176 @@ class AdService {
   static final AdService instance = AdService._internal();
   AdService._internal();
 
-  bool _isInitialized = false;
-  bool get isInitialized => _isInitialized;
+  BannerAd? _bannerAd;
+  InterstitialAd? _interstitialAd;
+  RewardedAd? _rewardedAd;
 
-  static bool get isMobilePlatform =>
+  bool _isBannerLoaded = false;
+  bool _isInterstitialLoaded = false;
+  bool _isRewardedLoaded = false;
+
+  bool get isBannerLoaded => _isBannerLoaded;
+  BannerAd? get bannerAd => _bannerAd;
+
+  bool get isSupported =>
       !kIsWeb && (Platform.isAndroid || Platform.isIOS);
 
-  // 官方 AdMob 測試廣告單元 ID
-  static String get bannerAdUnitId {
+  String get bannerAdUnitId {
     if (kIsWeb) return '';
-    if (Platform.isAndroid) {
-      return 'ca-app-pub-3940256099942544/6300978111';
-    } else if (Platform.isIOS) {
-      return 'ca-app-pub-3940256099942544/2934735716';
-    }
+    if (Platform.isAndroid) return 'ca-app-pub-3940256099942544/6300978111';
+    if (Platform.isIOS) return 'ca-app-pub-3940256099942544/2934735716';
     return '';
   }
 
-  static String get rewardedAdUnitId {
+  String get interstitialAdUnitId {
     if (kIsWeb) return '';
-    if (Platform.isAndroid) {
-      return 'ca-app-pub-3940256099942544/5224354917';
-    } else if (Platform.isIOS) {
-      return 'ca-app-pub-3940256099942544/1712485313';
-    }
+    if (Platform.isAndroid) return 'ca-app-pub-3940256099942544/1033173712';
+    if (Platform.isIOS) return 'ca-app-pub-3940256099942544/4411468910';
     return '';
   }
 
-  static String get interstitialAdUnitId {
+  String get rewardedAdUnitId {
     if (kIsWeb) return '';
-    if (Platform.isAndroid) {
-      return 'ca-app-pub-3940256099942544/1033173712';
-    } else if (Platform.isIOS) {
-      return 'ca-app-pub-3940256099942544/4411468910';
-    }
+    if (Platform.isAndroid) return 'ca-app-pub-3940256099942544/5224354917';
+    if (Platform.isIOS) return 'ca-app-pub-3940256099942544/1712485313';
     return '';
   }
 
   Future<void> initialize() async {
-    if (!isMobilePlatform) return;
+    if (!isSupported) return;
     try {
-      await MobileAds.instance.initialize();
-      _isInitialized = true;
-      debugPrint('AdMob SDK Initialized successfully');
+      await MobileAds.instance.initialize().timeout(const Duration(seconds: 2));
+      _loadInterstitialAd();
+      _loadRewardedAd();
     } catch (e) {
-      debugPrint('AdMob SDK Initialization failed: ');
+      debugPrint('AdMob initialize timeout or failed: ');
     }
   }
 
   BannerAd? createBannerAd({
     required Function() onAdLoaded,
-    required Function(LoadAdError) onAdFailedToLoad,
-    AdSize size = AdSize.banner,
+    Function(LoadAdError error)? onAdFailedToLoad,
   }) {
-    if (!isMobilePlatform) return null;
-
-    final banner = BannerAd(
+    if (!isSupported) return null;
+    return BannerAd(
       adUnitId: bannerAdUnitId,
-      size: size,
+      size: AdSize.banner,
       request: const AdRequest(),
       listener: BannerAdListener(
         onAdLoaded: (ad) {
-          debugPrint('BannerAd loaded: ');
+          _isBannerLoaded = true;
           onAdLoaded();
         },
         onAdFailedToLoad: (ad, error) {
-          debugPrint('BannerAd failed to load: ');
+          _isBannerLoaded = false;
           ad.dispose();
-          onAdFailedToLoad(error);
+          debugPrint('BannerAd load failed: ');
+          onAdFailedToLoad?.call(error);
+        },
+      ),
+    )..load();
+  }
+
+  void _loadInterstitialAd() {
+    if (!isSupported) return;
+    InterstitialAd.load(
+      adUnitId: interstitialAdUnitId,
+      request: const AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (ad) {
+          _interstitialAd = ad;
+          _isInterstitialLoaded = true;
+        },
+        onAdFailedToLoad: (err) {
+          _isInterstitialLoaded = false;
+          debugPrint('InterstitialAd failed: ');
         },
       ),
     );
+  }
 
-    banner.load();
-    return banner;
+  void _loadRewardedAd() {
+    if (!isSupported) return;
+    RewardedAd.load(
+      adUnitId: rewardedAdUnitId,
+      request: const AdRequest(),
+      rewardedAdLoadCallback: RewardedAdLoadCallback(
+        onAdLoaded: (ad) {
+          _rewardedAd = ad;
+          _isRewardedLoaded = true;
+        },
+        onAdFailedToLoad: (err) {
+          _isRewardedLoaded = false;
+          debugPrint('RewardedAd failed: ');
+        },
+      ),
+    );
   }
 
   void showRewardedAd({
     required Function(RewardItem reward) onUserEarnedReward,
     Function()? onAdFailedToLoad,
   }) {
-    if (!isMobilePlatform) {
-      onUserEarnedReward(RewardItem(3, 'AI_QUOTA'));
+    if (!isSupported) {
+      onUserEarnedReward(RewardItem(1, 'mock_reward'));
       return;
     }
 
-    RewardedAd.load(
-      adUnitId: rewardedAdUnitId,
-      request: const AdRequest(),
-      rewardedAdLoadCallback: RewardedAdLoadCallback(
-        onAdLoaded: (ad) {
-          ad.fullScreenContentCallback = FullScreenContentCallback(
-            onAdDismissedFullScreenContent: (ad) {
-              ad.dispose();
-            },
-            onAdFailedToShowFullScreenContent: (ad, error) {
-              ad.dispose();
-            },
-          );
-          ad.show(onUserEarnedReward: (adWithoutView, reward) {
-            onUserEarnedReward(reward);
-          });
+    if (_isRewardedLoaded && _rewardedAd != null) {
+      _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (ad) {
+          ad.dispose();
+          _isRewardedLoaded = false;
+          _loadRewardedAd();
         },
-        onAdFailedToLoad: (error) {
-          debugPrint('RewardedAd failed to load: ');
-          if (onAdFailedToLoad != null) onAdFailedToLoad();
+        onAdFailedToShowFullScreenContent: (ad, err) {
+          ad.dispose();
+          _isRewardedLoaded = false;
+          _loadRewardedAd();
+          onAdFailedToLoad?.call();
         },
-      ),
-    );
+      );
+      _rewardedAd!.show(onUserEarnedReward: (adWithoutView, reward) {
+        onUserEarnedReward(reward);
+      });
+    } else {
+      debugPrint('RewardedAd not loaded yet, triggering fallback reward');
+      onUserEarnedReward(RewardItem(1, 'mock_reward'));
+      _loadRewardedAd();
+    }
   }
 
   void showInterstitialAd({Function()? onAdDismissed}) {
-    if (!isMobilePlatform) {
-      if (onAdDismissed != null) onAdDismissed();
+    if (!isSupported) {
+      onAdDismissed?.call();
       return;
     }
 
-    InterstitialAd.load(
-      adUnitId: interstitialAdUnitId,
-      request: const AdRequest(),
-      adLoadCallback: InterstitialAdLoadCallback(
-        onAdLoaded: (ad) {
-          ad.fullScreenContentCallback = FullScreenContentCallback(
-            onAdDismissedFullScreenContent: (ad) {
-              ad.dispose();
-              if (onAdDismissed != null) onAdDismissed();
-            },
-            onAdFailedToShowFullScreenContent: (ad, error) {
-              ad.dispose();
-              if (onAdDismissed != null) onAdDismissed();
-            },
-          );
-          ad.show();
+    if (_isInterstitialLoaded && _interstitialAd != null) {
+      _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (ad) {
+          ad.dispose();
+          _isInterstitialLoaded = false;
+          _loadInterstitialAd();
+          onAdDismissed?.call();
         },
-        onAdFailedToLoad: (error) {
-          debugPrint('InterstitialAd failed to load: ');
-          if (onAdDismissed != null) onAdDismissed();
+        onAdFailedToShowFullScreenContent: (ad, err) {
+          ad.dispose();
+          _isInterstitialLoaded = false;
+          _loadInterstitialAd();
+          onAdDismissed?.call();
         },
-      ),
-    );
+      );
+      _interstitialAd!.show();
+    } else {
+      onAdDismissed?.call();
+      _loadInterstitialAd();
+    }
+  }
+
+  void dispose() {
+    _bannerAd?.dispose();
+    _interstitialAd?.dispose();
+    _rewardedAd?.dispose();
   }
 }

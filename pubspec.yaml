@@ -20,18 +20,18 @@ dependencies:
   flutter_animate: ^4.5.0
   google_mobile_ads: ^5.1.0
   path_provider: ^2.1.6
+  flutter_native_splash: ^2.4.4
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
-  flutter_native_splash: ^2.4.4
 
 flutter:
   uses-material-design: true
   generate: true
   assets:
     - assets/icons/
-
 dependency_overrides:
   record_platform_interface: 1.2.0
+  record_web: 1.1.1
