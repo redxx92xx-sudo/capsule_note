@@ -14,6 +14,7 @@ import 'theme/app_theme.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // 初始化 intl 多國語言日期格式數據庫 (避免 Release 模式 LocaleDataException)
   try {
     await initializeDateFormatting();
   } catch (e) {
@@ -25,6 +26,7 @@ void main() async {
     DeviceOrientation.portraitDown,
   ]);
 
+  // 異步非阻塞初始化廣告服務
   AdService.instance.initialize().catchError((e) {
     debugPrint('AdService init error: ');
   });
@@ -63,6 +65,15 @@ class CapsuleNoteApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: AppLocalizations.supportedLocales,
+      localeResolutionCallback: (locale, supportedLocales) {
+        if (locale == null) return const Locale('zh');
+        for (final supported in supportedLocales) {
+          if (supported.languageCode == locale.languageCode) {
+            return supported;
+          }
+        }
+        return const Locale('zh');
+      },
       home: const HomeScreen(),
     );
   }

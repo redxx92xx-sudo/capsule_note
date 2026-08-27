@@ -36,7 +36,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       vsync: this,
       duration: const Duration(milliseconds: 1600),
     );
-    WidgetsBinding.instance.addPostFrameCallback((_) { if (mounted) _loadBannerAd(); });
+    _loadBannerAd();
   }
 
   void _loadBannerAd() {
