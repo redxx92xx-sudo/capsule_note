@@ -195,44 +195,48 @@ class _CalendarScreenState extends State<CalendarScreen> {
             setState(() => _selectedDay = cellDate);
             provider.setSelectedDate(cellDate);
           },
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: isSelected
-                      ? colors.accent
-                      : (isToday ? colors.divider : null),
-                ),
-                child: Text(
-                  '$dayNumber',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: isSelected || isToday
-                        ? FontWeight.w600
-                        : FontWeight.w400,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
                     color: isSelected
-                        ? colors.onAccent
-                        : colors.textPrimary,
+                        ? colors.accent
+                        : (isToday ? colors.divider : null),
+                  ),
+                  child: Text(
+                    '$dayNumber',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: isSelected || isToday
+                          ? FontWeight.w600
+                          : FontWeight.w400,
+                      color: isSelected
+                          ? colors.onAccent
+                          : colors.textPrimary,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 2),
-              Container(
-                width: 5,
-                height: 5,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: hasTodos
-                      ? (isSelected ? colors.accent : colors.textSecondary)
-                      : Colors.transparent,
+                const SizedBox(height: 2),
+                Container(
+                  width: 5,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: hasTodos
+                        ? (isSelected ? colors.accent : colors.textSecondary)
+                        : Colors.transparent,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
