@@ -16,11 +16,14 @@ class DailyDigestModel {
     required this.processedNotesCount,
   });
 
-  factory DailyDigestModel.generateFromCapsules(List<CapsuleModel> capsules, {DateTime? targetDate}) {
-    return DailyDigestModel.fromCapsules(targetDate ?? DateTime.now(), capsules);
+  factory DailyDigestModel.generateFromCapsules(List<CapsuleModel> capsules,
+      {DateTime? targetDate}) {
+    return DailyDigestModel.fromCapsules(
+        targetDate ?? DateTime.now(), capsules);
   }
 
-  factory DailyDigestModel.fromCapsules(DateTime date, List<CapsuleModel> capsules) {
+  factory DailyDigestModel.fromCapsules(
+      DateTime date, List<CapsuleModel> capsules) {
     final todayCapsules = capsules.where((c) {
       return c.createdAt.year == date.year &&
           c.createdAt.month == date.month &&
@@ -60,7 +63,8 @@ class DailyDigestModel {
     final dateStr = DateFormat('yyyy-MM-dd').format(date);
     final buffer = StringBuffer();
     buffer.writeln('# 📰 今日靈感晚報 ($dateStr)');
-    buffer.writeln('📊 **今日概況**：共 $totalNotesCount 則膠囊，已整理 $processedNotesCount 則');
+    buffer.writeln(
+        '📊 **今日概況**：共 $totalNotesCount 則膠囊，已整理 $processedNotesCount 則');
     buffer.writeln();
 
     buffer.writeln('## 💡 核心亮點摘要');
@@ -107,7 +111,8 @@ class DailyDigestModel {
     final dateStr = DateFormat('yyyy-MM-dd').format(date);
     final buffer = StringBuffer();
     buffer.writeln('# 📅 $dateStr Daily Digest');
-    buffer.writeln('> 📊 Total Capsules: $totalNotesCount | Processed: $processedNotesCount');
+    buffer.writeln(
+        '> 📊 Total Capsules: $totalNotesCount | Processed: $processedNotesCount');
     buffer.writeln();
     buffer.writeln('### 💡 Key Takeaways');
     for (final h in keyHighlights) {

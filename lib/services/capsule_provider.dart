@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import '../models/capsule_model.dart';
 import 'ai_summary_service.dart';
+import 'audio_record_service.dart';
 
 class CapsuleProvider extends ChangeNotifier {
   static const String _storageKey = 'capsule_notes_data';
@@ -58,18 +59,38 @@ class CapsuleProvider extends ChangeNotifier {
 
       final rawData = prefs.getStringList(_storageKey);
       if (rawData != null && rawData.isNotEmpty) {
-        _capsules = rawData
-            .map((item) => CapsuleModel.fromJson(item))
-            .toList();
+        _capsules = rawData.map((item) => CapsuleModel.fromJson(item)).toList();
       } else {
         _capsules = _getInitialSampleCapsules();
         await _saveToPreferences();
       }
+
+      await _migrateLegacyTempAudioPaths();
     } catch (e) {
-      debugPrint('Error loading capsules: ');
+      debugPrint('Error loading capsules: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  /// Move any capsule audio still under the old temp folder into documents.
+  Future<void> _migrateLegacyTempAudioPaths() async {
+    var changed = false;
+    for (var i = 0; i < _capsules.length; i++) {
+      final capsule = _capsules[i];
+      final path = capsule.audioPath;
+      if (path == null || path.isEmpty) continue;
+
+      final migrated =
+          await AudioRecordService.instance.migrateTempAudioIfNeeded(path);
+      if (migrated != null && migrated != path) {
+        _capsules[i] = capsule.copyWith(audioPath: migrated);
+        changed = true;
+      }
+    }
+    if (changed) {
+      await _saveToPreferences();
     }
   }
 
@@ -80,7 +101,7 @@ class CapsuleProvider extends ChangeNotifier {
       await prefs.setStringList(_storageKey, stringList);
       await prefs.setBool(_themeModeKey, _isDarkMode);
     } catch (e) {
-      debugPrint('Error saving capsules: ');
+      debugPrint('Error saving capsules: $e');
     }
   }
 
@@ -102,29 +123,56 @@ class CapsuleProvider extends ChangeNotifier {
 
   Future<CapsuleModel> addCapsule({
     String? title,
-    required String rawTranscript,
+    String rawTranscript = '',
     String? summary,
     List<String>? actionItems,
     List<String>? tags,
     String? audioPath,
     bool isProcessed = false,
   }) async {
-    // 若無提供結構化欄位，自動透過 AI 提煉
     String finalTitle = title ?? '';
     String finalSummary = summary ?? '';
     List<String> finalActions = actionItems ?? [];
     List<String> finalTags = tags ?? [];
 
-    if (finalTitle.isEmpty || finalSummary.isEmpty || finalActions.isEmpty || finalTags.isEmpty) {
-      final aiResult = await AiSummaryService.instance.structureTranscript(rawTranscript);
-      if (finalTitle.isEmpty) finalTitle = aiResult.title;
-      if (finalSummary.isEmpty) finalSummary = aiResult.summary;
-      if (finalActions.isEmpty) finalActions = aiResult.actionItems;
-      if (finalTags.isEmpty) finalTags = aiResult.tags;
+    // Text/summary failures must never delete or discard audio.
+    // Audio-only capsules: no demo transcript, skip AI structuring.
+    try {
+      if (rawTranscript.trim().isEmpty) {
+        if (finalTitle.isEmpty) finalTitle = '語音錄音記事';
+        if (finalSummary.isEmpty) finalSummary = '（僅錄音，尚無文字）';
+        if (finalTags.isEmpty) finalTags = ['錄音'];
+        // Keep actionItems empty until user adds or transcribes.
+      } else if (finalTitle.isEmpty ||
+          finalSummary.isEmpty ||
+          finalActions.isEmpty ||
+          finalTags.isEmpty) {
+        final aiResult =
+            await AiSummaryService.instance.structureTranscript(rawTranscript);
+        if (finalTitle.isEmpty) finalTitle = aiResult.title;
+        if (finalSummary.isEmpty) finalSummary = aiResult.summary;
+        if (finalActions.isEmpty) finalActions = aiResult.actionItems;
+        if (finalTags.isEmpty) finalTags = aiResult.tags;
+      }
+    } catch (e) {
+      debugPrint('AI summary failed (audio preserved): $e');
+      if (finalTitle.isEmpty) {
+        finalTitle = rawTranscript.isEmpty ? '語音錄音記事' : '未命名靈感膠囊';
+      }
+      if (finalSummary.isEmpty) {
+        finalSummary = rawTranscript.isEmpty ? '（僅錄音，尚無文字）' : rawTranscript;
+      }
+      if (finalTags.isEmpty) finalTags = ['錄音'];
     }
 
+    final id = _uuid.v4();
+    final boundPath = await AudioRecordService.instance.bindAudioToCapsuleId(
+      capsuleId: id,
+      sourcePath: audioPath,
+    );
+
     final newCapsule = CapsuleModel(
-      id: _uuid.v4(),
+      id: id,
       title: finalTitle,
       rawTranscript: rawTranscript,
       summary: finalSummary,
@@ -132,7 +180,7 @@ class CapsuleProvider extends ChangeNotifier {
       createdAt: DateTime.now(),
       isProcessed: isProcessed,
       tags: finalTags,
-      audioPath: audioPath,
+      audioPath: boundPath ?? audioPath,
     );
 
     _capsules.insert(0, newCapsule);
@@ -144,7 +192,12 @@ class CapsuleProvider extends ChangeNotifier {
   Future<void> updateCapsule(CapsuleModel updated) async {
     final index = _capsules.indexWhere((c) => c.id == updated.id);
     if (index != -1) {
-      _capsules[index] = updated;
+      final existing = _capsules[index];
+      // Never replace a valid audio path with null from an incomplete update.
+      final merged = updated.audioPath == null && existing.audioPath != null
+          ? updated.copyWith(audioPath: existing.audioPath)
+          : updated;
+      _capsules[index] = merged;
       notifyListeners();
       await _saveToPreferences();
     }
@@ -161,9 +214,22 @@ class CapsuleProvider extends ChangeNotifier {
   }
 
   Future<void> deleteCapsule(String id) async {
+    final index = _capsules.indexWhere((c) => c.id == id);
+    String? audioPath;
+    if (index != -1) {
+      audioPath = _capsules[index].audioPath;
+    }
     _capsules.removeWhere((c) => c.id == id);
     notifyListeners();
     await _saveToPreferences();
+
+    // Only delete this capsule's audio file — never the whole directory.
+    if (audioPath != null) {
+      final stillReferenced = _capsules.any((c) => c.audioPath == audioPath);
+      if (!stillReferenced) {
+        await AudioRecordService.instance.deleteAudioFile(audioPath);
+      }
+    }
   }
 
   List<CapsuleModel> _getInitialSampleCapsules() {
@@ -177,7 +243,7 @@ class CapsuleProvider extends ChangeNotifier {
         actionItems: [
           '長按底部按鈕體驗真實音訊錄音',
           '點擊便籤卡片進入詳情與編輯頁',
-          '點擊右上角切換深淺墨水屏主題'
+          '點擊右上角切換深淺墨水屏主題',
         ],
         createdAt: now.subtract(const Duration(minutes: 15)),
         isProcessed: false,
@@ -188,10 +254,7 @@ class CapsuleProvider extends ChangeNotifier {
         title: '產品架構迭代規劃',
         rawTranscript: '討論第二階段要串接本地 Whisper 語音模型與大語言模型做自動摘要整理。',
         summary: '規劃整合 AI 模型進行語音自動轉文字與重點行動項目提取。',
-        actionItems: [
-          '評估語音轉文字 API 延遲',
-          '設計離線語音快取機制'
-        ],
+        actionItems: ['評估語音轉文字 API 延遲', '設計離線語音快取機制'],
         createdAt: now.subtract(const Duration(hours: 3)),
         isProcessed: true,
         tags: ['工作', '技術'],

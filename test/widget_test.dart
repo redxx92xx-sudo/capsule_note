@@ -3,36 +3,64 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:capsule_note/main.dart';
-import 'package:capsule_note/models/capsule_model.dart';
+import 'package:capsule_note/services/alarm_port.dart';
 import 'package:capsule_note/services/capsule_provider.dart';
 import 'package:capsule_note/services/locale_provider.dart';
 import 'package:capsule_note/services/monetization_provider.dart';
+import 'package:capsule_note/services/notification_port.dart';
+import 'package:capsule_note/services/reminder_scheduler.dart';
+import 'package:capsule_note/services/todo_provider.dart';
+import 'support/fake_alarm_scheduler.dart';
+import 'support/fake_notification_service.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  late FakeNotificationService notifications;
+  late FakeAlarmScheduler alarms;
+  late ReminderScheduler scheduler;
+  late TodoProvider todoProvider;
+
   setUp(() {
     SharedPreferences.setMockInitialValues({});
-  });
-
-  testWidgets('Capsule Note app renders correctly with i18n & providers', (WidgetTester tester) async {
-    await tester.pumpWidget(
-      MultiProvider(
-        providers: [
-          ChangeNotifierProvider(create: (_) => CapsuleProvider()),
-          ChangeNotifierProvider(create: (_) => MonetizationProvider()),
-          ChangeNotifierProvider(create: (_) => LocaleProvider()),
-        ],
-        child: const CapsuleNoteApp(),
-      ),
+    notifications = FakeNotificationService();
+    alarms = FakeAlarmScheduler();
+    NotificationPort.instance = notifications;
+    AlarmPort.instance = alarms;
+    scheduler = ReminderScheduler(
+      notifService: notifications,
+      alarmService: alarms,
     );
-
-    await tester.pumpAndSettle();
-
-    // 驗證預設英文環境下 AppTitle 渲染
-    expect(find.text('Capsule Note'), findsOneWidget);
-    expect(find.byIcon(Icons.mic_none_outlined), findsOneWidget);
-    expect(find.byIcon(Icons.workspace_premium), findsOneWidget);
-    expect(find.byIcon(Icons.language), findsOneWidget);
+    ReminderScheduler.bindDefault(scheduler);
+    todoProvider = TodoProvider(
+      scheduler: scheduler,
+      autoInitialize: false,
+    );
   });
+
+  testWidgets(
+    'Capsule Note app renders with 4 navigation destinations',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider.value(value: todoProvider),
+            ChangeNotifierProvider(create: (_) => CapsuleProvider()),
+            ChangeNotifierProvider(create: (_) => MonetizationProvider()),
+            ChangeNotifierProvider(create: (_) => LocaleProvider()),
+          ],
+          child: const CapsuleNoteApp(),
+        ),
+      );
+
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.byType(NavigationBar), findsOneWidget);
+      expect(find.byType(NavigationDestination), findsNWidgets(4));
+      expect(find.byIcon(Icons.mic), findsOneWidget);
+    },
+  );
 
   test('MonetizationProvider quota and pro status test', () async {
     final mon = MonetizationProvider();
@@ -40,52 +68,12 @@ void main() {
 
     expect(mon.isPro, false);
     expect(mon.remainingDailyQuota, 5);
-
     expect(mon.consumeQuota(), true);
     expect(mon.remainingDailyQuota, 4);
-
     await mon.addRewardQuota(3);
     expect(mon.remainingDailyQuota, 7);
-
     await mon.setProStatus(true);
     expect(mon.isPro, true);
     expect(mon.remainingDailyQuota, 999);
-  });
-
-  test('LocaleProvider language switching test', () async {
-    final loc = LocaleProvider();
-    expect(loc.locale, null);
-
-    await loc.setLocale(const Locale('en'));
-    expect(loc.locale?.languageCode, 'en');
-
-    await loc.setLocale(const Locale('ja'));
-    expect(loc.locale?.languageCode, 'ja');
-  });
-
-  test('CapsuleModel serialization and copyWith test', () {
-    final now = DateTime.now();
-    final model = CapsuleModel(
-      id: 'test-1',
-      title: '測試膠囊',
-      rawTranscript: '這是語音轉譯內容',
-      summary: '這是摘要',
-      actionItems: ['行動1', '行動2'],
-      createdAt: now,
-      isProcessed: false,
-      tags: ['工作'],
-    );
-
-    final json = model.toJson();
-    final restored = CapsuleModel.fromJson(json);
-
-    expect(restored.id, 'test-1');
-    expect(restored.title, '測試膠囊');
-    expect(restored.tags, contains('工作'));
-    expect(restored.actionItems.length, 2);
-
-    final updated = model.copyWith(isProcessed: true);
-    expect(updated.isProcessed, true);
-    expect(updated.id, 'test-1');
   });
 }

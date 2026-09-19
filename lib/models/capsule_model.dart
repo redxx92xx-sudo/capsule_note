@@ -33,6 +33,7 @@ class CapsuleModel {
     bool? isProcessed,
     List<String>? tags,
     String? audioPath,
+    bool clearAudioPath = false,
   }) {
     return CapsuleModel(
       id: id ?? this.id,
@@ -43,7 +44,8 @@ class CapsuleModel {
       createdAt: createdAt ?? this.createdAt,
       isProcessed: isProcessed ?? this.isProcessed,
       tags: tags ?? this.tags,
-      audioPath: audioPath ?? this.audioPath,
+      // Never wipe a valid path with an accidental null unless explicitly cleared.
+      audioPath: clearAudioPath ? null : (audioPath ?? this.audioPath),
     );
   }
 

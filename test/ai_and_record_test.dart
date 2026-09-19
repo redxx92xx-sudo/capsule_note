@@ -32,7 +32,8 @@ void main() {
     });
 
     test('filters filler words and extracts English tasks', () async {
-      const transcript = 'Um basically we need to check the API response and send the email to client, you know.';
+      const transcript =
+          'Um basically we need to check the API response and send the email to client, you know.';
       final result = await ai.structureTranscript(transcript);
 
       expect(result.summary.contains('basically'), false);
@@ -48,6 +49,10 @@ void main() {
     test('initializes with default state', () {
       expect(audio.isRecording, false);
       expect(audio.currentRecordingPath, null);
+    });
+
+    test('permanent folder name is capsule_audio', () {
+      expect(AudioRecordService.audioFolderName, 'capsule_audio');
     });
   });
 

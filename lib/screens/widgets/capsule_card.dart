@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/capsule_model.dart';
 import '../../services/capsule_provider.dart';
-import '../../theme/app_theme.dart';
+import '../../theme/app_theme_capsule.dart';
 import '../capsule_detail_screen.dart';
 
 class CapsuleCard extends StatelessWidget {

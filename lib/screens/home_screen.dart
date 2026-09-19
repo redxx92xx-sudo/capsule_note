@@ -5,11 +5,11 @@ import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import '../services/ad_service.dart';
 import '../services/audio_record_service.dart';
-import '../services/speech_cleaner_service.dart';
 import '../services/capsule_provider.dart';
 import '../services/locale_provider.dart';
 import '../services/monetization_provider.dart';
-import '../theme/app_theme.dart';
+import '../theme/app_theme_capsule.dart';
+import 'capsule_detail_screen.dart';
 import 'daily_digest_screen.dart';
 import 'widgets/capsule_card.dart';
 import 'widgets/pro_modal.dart';
@@ -22,7 +22,8 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   bool _isRecording = false;
   late AnimationController _rippleController;
   BannerAd? _bannerAd;
@@ -40,7 +41,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   void _loadBannerAd() {
-    final monetization = Provider.of<MonetizationProvider>(context, listen: false);
+    final monetization =
+        Provider.of<MonetizationProvider>(context, listen: false);
     if (monetization.isPro) return;
 
     _bannerAd = AdService.instance.createBannerAd(
@@ -93,7 +95,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   void _showRecordingCompletedDialog(String? audioPath) {
     final l10n = AppLocalizations.of(context)!;
     final provider = Provider.of<CapsuleProvider>(context, listen: false);
-    final monetization = Provider.of<MonetizationProvider>(context, listen: false);
+    final monetization =
+        Provider.of<MonetizationProvider>(context, listen: false);
     final isDark = provider.isDarkMode;
 
     final hasQuota = monetization.consumeQuota();
@@ -101,10 +104,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ProModal.show(context);
       return;
     }
-
-    // 口語自動清洗示範預設文字
-    const rawDemo = '呃，今天下午要跟產品團隊開會，然後，討論那個語音模型的架構與效能優化。';
-    final cleanedDemo = SpeechCleanerService.instance.clean(rawDemo);
 
     showModalBottomSheet(
       context: context,
@@ -114,10 +113,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (ctx) {
-        final titleController = TextEditingController(text: '語音錄音靈感');
-        final transcriptController = TextEditingController(text: cleanedDemo);
-        final tagController = TextEditingController(text: '靈感, 工作');
-
         return Padding(
           padding: EdgeInsets.only(
             left: 20,
@@ -130,77 +125,51 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: isDark ? AppTheme.nightHighlight : AppTheme.inkHighlightLight,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(Icons.mic, size: 20, color: AppTheme.inkBlue),
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        l10n.voiceConversionDone,
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: AppTheme.inkBlue.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
+                      color: isDark
+                          ? AppTheme.nightHighlight
+                          : AppTheme.inkHighlightLight,
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.auto_awesome, size: 12, color: AppTheme.inkBlue),
-                        const SizedBox(width: 4),
-                        Text(
-                          l10n.speechCleanedBadge,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: AppTheme.inkBlue,
-                          ),
-                        ),
-                      ],
+                    child: const Icon(Icons.mic,
+                        size: 20, color: AppTheme.inkBlue),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      l10n.recordingSavedTitle,
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: titleController,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                decoration: InputDecoration(
-                  labelText: l10n.capsuleTitleLabel,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
               const SizedBox(height: 12),
-              TextField(
-                controller: transcriptController,
-                maxLines: 3,
-                style: const TextStyle(fontSize: 14),
-                decoration: InputDecoration(
-                  labelText: l10n.rawTranscriptLabel,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              Text(
+                l10n.recordingSavedSubtitle,
+                style: TextStyle(
+                  fontSize: 14,
+                  height: 1.4,
+                  color: isDark
+                      ? AppTheme.nightSecondary
+                      : AppTheme.inkSecondary,
                 ),
               ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: tagController,
-                style: const TextStyle(fontSize: 14),
-                decoration: InputDecoration(
-                  labelText: l10n.tagsLabel,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              if (audioPath != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  l10n.audioOnlySaveHint,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDark
+                        ? AppTheme.nightSecondary
+                        : AppTheme.inkSecondary,
+                  ),
                 ),
-              ),
+              ],
               const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
@@ -214,26 +183,54 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     ),
                     elevation: 0,
                   ),
-                  onPressed: () {
-                    final tags = tagController.text
-                        .split(',')
-                        .map((t) => t.trim())
-                        .where((t) => t.isNotEmpty)
-                        .toList();
-
-                    provider.addCapsule(
-                      title: titleController.text.trim(),
-                      rawTranscript: transcriptController.text.trim(),
-                      tags: tags.isEmpty ? ['靈感'] : tags,
+                  onPressed: () async {
+                    await provider.addCapsule(
+                      title: l10n.audioRecordingDefaultTitle,
+                      rawTranscript: '',
                       audioPath: audioPath,
                     );
-
                     monetization.onCapsuleCreated();
-                    Navigator.pop(ctx);
+                    if (ctx.mounted) Navigator.pop(ctx);
                   },
                   child: Text(
-                    l10n.saveAsNote,
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                    l10n.saveRecordingOnly,
+                    style: const TextStyle(
+                        fontSize: 15, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.inkBlue,
+                    side: const BorderSide(color: AppTheme.inkBlue),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () async {
+                    final capsule = await provider.addCapsule(
+                      title: l10n.audioRecordingDefaultTitle,
+                      rawTranscript: '',
+                      audioPath: audioPath,
+                    );
+                    monetization.onCapsuleCreated();
+                    if (!ctx.mounted) return;
+                    Navigator.pop(ctx);
+                    if (!mounted) return;
+                    await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => CapsuleDetailScreen(capsule: capsule),
+                      ),
+                    );
+                  },
+                  child: Text(
+                    l10n.transcribeLater,
+                    style: const TextStyle(
+                        fontSize: 15, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
@@ -263,17 +260,22 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               mainAxisSize: MainAxisSize.min,
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                   child: Text(
                     l10n.switchLanguage,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),
                 ...LocaleProvider.supportedLocales.map((loc) {
-                  final isSelected = localeProvider.locale?.languageCode == loc.languageCode;
+                  final isSelected =
+                      localeProvider.isSameLocale(localeProvider.locale, loc);
                   return ListTile(
-                    title: Text(localeProvider.getLanguageName(loc.languageCode)),
-                    trailing: isSelected ? const Icon(Icons.check, color: AppTheme.inkBlue) : null,
+                    title: Text(localeProvider.getLanguageName(loc)),
+                    trailing: isSelected
+                        ? const Icon(Icons.check, color: AppTheme.inkBlue)
+                        : null,
                     onTap: () {
                       localeProvider.setLocale(loc);
                       Navigator.pop(ctx);
@@ -299,7 +301,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
     String dateStr;
     try {
-      dateStr = DateFormat.yMMMEd(Localizations.localeOf(context).toString()).format(now);
+      dateStr = DateFormat.yMMMEd(Localizations.localeOf(context).toString())
+          .format(now);
     } catch (_) {
       try {
         dateStr = DateFormat('yyyy/MM/dd').format(now);
@@ -317,7 +320,17 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
+                  Row(
+                    children: [
+                      if (Navigator.of(context).canPop()) ...[
+                        IconButton(
+                          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+                          onPressed: () => Navigator.of(context).pop(),
+                          icon: const Icon(Icons.arrow_back),
+                        ),
+                        const SizedBox(width: 4),
+                      ],
+                      Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
@@ -338,21 +351,29 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           ),
                           const SizedBox(width: 8),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: isDark ? AppTheme.nightHighlight : AppTheme.inkHighlightLight,
+                              color: isDark
+                                  ? AppTheme.nightHighlight
+                                  : AppTheme.inkHighlightLight,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: isDark ? AppTheme.nightBorder : AppTheme.inkBorderLight,
+                                color: isDark
+                                    ? AppTheme.nightBorder
+                                    : AppTheme.inkBorderLight,
                                 width: 1,
                               ),
                             ),
                             child: Text(
-                              l10n.capsulesPending(capsuleProvider.unprocessedCount),
+                              l10n.capsulesPending(
+                                  capsuleProvider.unprocessedCount),
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
-                                color: isDark ? AppTheme.nightText : AppTheme.inkBlue,
+                                color: isDark
+                                    ? AppTheme.nightText
+                                    : AppTheme.inkBlue,
                               ),
                             ),
                           ),
@@ -360,16 +381,21 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       ),
                     ],
                   ),
+                    ],
+                  ),
                   Row(
                     children: [
-                      // 今日靈感晚報按鈕
+                      // Daily digest
                       IconButton(
                         key: const Key('daily_digest_header_btn'),
                         tooltip: l10n.dailyDigestTitle,
                         style: IconButton.styleFrom(
-                          backgroundColor: isDark ? AppTheme.nightHighlight : AppTheme.inkHighlightLight,
+                          backgroundColor: isDark
+                              ? AppTheme.nightHighlight
+                              : AppTheme.inkHighlightLight,
                         ),
-                        icon: const Icon(Icons.auto_stories_outlined, size: 20, color: AppTheme.inkBlue),
+                        icon: const Icon(Icons.auto_stories_outlined,
+                            size: 20, color: AppTheme.inkBlue),
                         onPressed: () {
                           Navigator.push(
                             context,
@@ -385,20 +411,28 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         style: IconButton.styleFrom(
                           backgroundColor: monetization.isPro
                               ? const Color(0xFFD4AF37).withValues(alpha: 0.2)
-                              : (isDark ? AppTheme.nightHighlight : AppTheme.inkHighlightLight),
+                              : (isDark
+                                  ? AppTheme.nightHighlight
+                                  : AppTheme.inkHighlightLight),
                         ),
                         icon: Icon(
                           Icons.workspace_premium,
                           size: 20,
-                          color: monetization.isPro ? const Color(0xFFD4AF37) : (isDark ? AppTheme.nightSecondary : AppTheme.inkSecondary),
+                          color: monetization.isPro
+                              ? const Color(0xFFD4AF37)
+                              : (isDark
+                                  ? AppTheme.nightSecondary
+                                  : AppTheme.inkSecondary),
                         ),
                         onPressed: () => ProModal.show(context),
                       ),
                       const SizedBox(width: 4),
                       IconButton(
-                        tooltip: '今日靈感晚報',
+                        tooltip: l10n.dailyDigestTitle,
                         style: IconButton.styleFrom(
-                          backgroundColor: isDark ? AppTheme.nightHighlight : AppTheme.inkHighlightLight,
+                          backgroundColor: isDark
+                              ? AppTheme.nightHighlight
+                              : AppTheme.inkHighlightLight,
                         ),
                         icon: const Icon(Icons.auto_stories, size: 20),
                         onPressed: () {
@@ -414,19 +448,26 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       IconButton(
                         tooltip: l10n.switchLanguage,
                         style: IconButton.styleFrom(
-                          backgroundColor: isDark ? AppTheme.nightHighlight : AppTheme.inkHighlightLight,
+                          backgroundColor: isDark
+                              ? AppTheme.nightHighlight
+                              : AppTheme.inkHighlightLight,
                         ),
                         icon: const Icon(Icons.language, size: 20),
                         onPressed: () => _showLanguageSelector(context),
                       ),
                       const SizedBox(width: 4),
                       IconButton(
-                        tooltip: isDark ? l10n.lightModeToggle : l10n.darkModeToggle,
+                        tooltip:
+                            isDark ? l10n.lightModeToggle : l10n.darkModeToggle,
                         style: IconButton.styleFrom(
-                          backgroundColor: isDark ? AppTheme.nightHighlight : AppTheme.inkHighlightLight,
+                          backgroundColor: isDark
+                              ? AppTheme.nightHighlight
+                              : AppTheme.inkHighlightLight,
                         ),
                         icon: Icon(
-                          isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+                          isDark
+                              ? Icons.light_mode_outlined
+                              : Icons.dark_mode_outlined,
                           size: 20,
                         ),
                         onPressed: () => capsuleProvider.toggleTheme(),
@@ -444,10 +485,14 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     child: Container(
                       height: 42,
                       decoration: BoxDecoration(
-                        color: isDark ? AppTheme.nightCard : AppTheme.paperWhiteCard,
+                        color: isDark
+                            ? AppTheme.nightCard
+                            : AppTheme.paperWhiteCard,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: isDark ? AppTheme.nightBorder : AppTheme.inkBorderLight,
+                          color: isDark
+                              ? AppTheme.nightBorder
+                              : AppTheme.inkBorderLight,
                         ),
                       ),
                       child: TextField(
@@ -457,27 +502,36 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           hintText: l10n.tapToRecordHint,
                           hintStyle: TextStyle(
                             fontSize: 13,
-                            color: isDark ? AppTheme.nightSecondary : AppTheme.inkSecondary,
+                            color: isDark
+                                ? AppTheme.nightSecondary
+                                : AppTheme.inkSecondary,
                           ),
                           prefixIcon: Icon(
                             Icons.search,
                             size: 18,
-                            color: isDark ? AppTheme.nightSecondary : AppTheme.inkSecondary,
+                            color: isDark
+                                ? AppTheme.nightSecondary
+                                : AppTheme.inkSecondary,
                           ),
                           border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                          contentPadding:
+                              const EdgeInsets.symmetric(vertical: 10),
                         ),
                       ),
                     ),
                   ),
                   const SizedBox(width: 10),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                     decoration: BoxDecoration(
-                      color: isDark ? AppTheme.nightCard : AppTheme.paperWhiteCard,
+                      color:
+                          isDark ? AppTheme.nightCard : AppTheme.paperWhiteCard,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: isDark ? AppTheme.nightBorder : AppTheme.inkBorderLight,
+                        color: isDark
+                            ? AppTheme.nightBorder
+                            : AppTheme.inkBorderLight,
                       ),
                     ),
                     child: Row(
@@ -485,15 +539,21 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         Icon(
                           Icons.bolt,
                           size: 16,
-                          color: monetization.isPro ? const Color(0xFFD4AF37) : AppTheme.inkBlue,
+                          color: monetization.isPro
+                              ? const Color(0xFFD4AF37)
+                              : AppTheme.inkBlue,
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          monetization.isPro ? l10n.proBadge : '${monetization.remainingDailyQuota}',
+                          monetization.isPro
+                              ? l10n.proBadge
+                              : '${monetization.remainingDailyQuota}',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
-                            color: monetization.isPro ? const Color(0xFFD4AF37) : AppTheme.inkBlue,
+                            color: monetization.isPro
+                                ? const Color(0xFFD4AF37)
+                                : AppTheme.inkBlue,
                           ),
                         ),
                       ],
@@ -516,11 +576,17 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         label: Text(l10n.filterAll),
                         selected: capsuleProvider.selectedTag == null,
                         onSelected: (_) => capsuleProvider.setSelectedTag(null),
-                        backgroundColor: isDark ? AppTheme.nightCard : AppTheme.paperWhiteCard,
-                        selectedColor: isDark ? AppTheme.nightHighlight : AppTheme.inkHighlightLight,
+                        backgroundColor: isDark
+                            ? AppTheme.nightCard
+                            : AppTheme.paperWhiteCard,
+                        selectedColor: isDark
+                            ? AppTheme.nightHighlight
+                            : AppTheme.inkHighlightLight,
                         checkmarkColor: AppTheme.inkBlue,
                         side: BorderSide(
-                          color: isDark ? AppTheme.nightBorder : AppTheme.inkBorderLight,
+                          color: isDark
+                              ? AppTheme.nightBorder
+                              : AppTheme.inkBorderLight,
                         ),
                       ),
                     ),
@@ -532,13 +598,20 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           label: Text('#$tag'),
                           selected: isSelected,
                           onSelected: (_) {
-                            capsuleProvider.setSelectedTag(isSelected ? null : tag);
+                            capsuleProvider
+                                .setSelectedTag(isSelected ? null : tag);
                           },
-                          backgroundColor: isDark ? AppTheme.nightCard : AppTheme.paperWhiteCard,
-                          selectedColor: isDark ? AppTheme.nightHighlight : AppTheme.inkHighlightLight,
+                          backgroundColor: isDark
+                              ? AppTheme.nightCard
+                              : AppTheme.paperWhiteCard,
+                          selectedColor: isDark
+                              ? AppTheme.nightHighlight
+                              : AppTheme.inkHighlightLight,
                           checkmarkColor: AppTheme.inkBlue,
                           side: BorderSide(
-                            color: isDark ? AppTheme.nightBorder : AppTheme.inkBorderLight,
+                            color: isDark
+                                ? AppTheme.nightBorder
+                                : AppTheme.inkBorderLight,
                           ),
                         ),
                       );
@@ -548,7 +621,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               ),
             Expanded(
               child: capsuleProvider.isLoading
-                  ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
+                  ? const Center(
+                      child: CircularProgressIndicator(strokeWidth: 2))
                   : capsuleProvider.filteredCapsules.isEmpty
                       ? Center(
                           child: Column(
@@ -557,19 +631,24 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                               Icon(
                                 Icons.note_alt_outlined,
                                 size: 56,
-                                color: isDark ? AppTheme.nightSecondary : AppTheme.inkSecondary,
+                                color: isDark
+                                    ? AppTheme.nightSecondary
+                                    : AppTheme.inkSecondary,
                               ),
                               const SizedBox(height: 16),
                               Text(
                                 l10n.emptyCapsulesTitle,
-                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                    fontSize: 18, fontWeight: FontWeight.bold),
                               ),
                               const SizedBox(height: 8),
                               Text(
                                 l10n.emptyCapsulesSubtitle,
                                 style: TextStyle(
                                   fontSize: 14,
-                                  color: isDark ? AppTheme.nightSecondary : AppTheme.inkSecondary,
+                                  color: isDark
+                                      ? AppTheme.nightSecondary
+                                      : AppTheme.inkSecondary,
                                 ),
                               ),
                             ],
@@ -579,7 +658,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
                           itemCount: capsuleProvider.filteredCapsules.length,
                           itemBuilder: (context, index) {
-                            final capsule = capsuleProvider.filteredCapsules[index];
+                            final capsule =
+                                capsuleProvider.filteredCapsules[index];
                             return CapsuleCard(capsule: capsule);
                           },
                         ),

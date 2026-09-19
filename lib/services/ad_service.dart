@@ -17,8 +17,7 @@ class AdService {
   bool get isBannerLoaded => _isBannerLoaded;
   BannerAd? get bannerAd => _bannerAd;
 
-  bool get isSupported =>
-      !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+  bool get isSupported => !kIsWeb && (Platform.isAndroid || Platform.isIOS);
 
   String get bannerAdUnitId {
     if (kIsWeb) return '';
@@ -74,6 +73,39 @@ class AdService {
         },
       ),
     )..load();
+  }
+
+  /// Anchored adaptive banner for top-of-content placement (test unit IDs).
+  Future<BannerAd?> createAnchoredAdaptiveBanner({
+    required int width,
+    required void Function(BannerAd ad) onAdLoaded,
+    void Function(LoadAdError error)? onAdFailedToLoad,
+  }) async {
+    if (!isSupported) return null;
+    final size = await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(
+      width,
+    );
+    if (size == null) return null;
+
+    late final BannerAd banner;
+    banner = BannerAd(
+      adUnitId: bannerAdUnitId,
+      size: size,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          _isBannerLoaded = true;
+          onAdLoaded(ad as BannerAd);
+        },
+        onAdFailedToLoad: (ad, error) {
+          _isBannerLoaded = false;
+          ad.dispose();
+          debugPrint('Adaptive BannerAd load failed: $error');
+          onAdFailedToLoad?.call(error);
+        },
+      ),
+    )..load();
+    return banner;
   }
 
   void _loadInterstitialAd() {

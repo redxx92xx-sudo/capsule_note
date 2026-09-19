@@ -15,21 +15,51 @@ class SpeechCleanerService {
   SpeechCleanerService._internal();
 
   static final List<String> _chineseFillers = [
-    '呃', '嗯', '那個', '就是說', '然後', '其實', '基本上',
-    '事實上', '對了', '總之', '老實說', '坦白說', '阿', '啦',
-    '吧', '呢', '呀', '唄', '那麼'
+    '呃',
+    '嗯',
+    '那個',
+    '就是說',
+    '然後',
+    '其實',
+    '基本上',
+    '事實上',
+    '對了',
+    '總之',
+    '老實說',
+    '坦白說',
+    '阿',
+    '啦',
+    '吧',
+    '呢',
+    '呀',
+    '唄',
+    '那麼'
   ];
 
   static final List<RegExp> _englishFillerRegexes = [
-    RegExp(r'\b(uh|um|er|ah|like|you know|basically|actually|literally|so yeah|I mean)\b', caseSensitive: false),
+    RegExp(
+        r'\b(uh|um|er|ah|like|you know|basically|actually|literally|so yeah|I mean)\b',
+        caseSensitive: false),
   ];
 
   static final List<String> _japaneseFillers = [
-    'えーと', 'あの', 'その', 'なんか', 'ええ', 'まあ', 'っていうか'
+    'えーと',
+    'あの',
+    'その',
+    'なんか',
+    'ええ',
+    'まあ',
+    'っていうか'
   ];
 
   static final List<String> _koreanFillers = [
-    '어', '음', '그', '저', '있잖아', '그냥', '말하자면'
+    '어',
+    '음',
+    '그',
+    '저',
+    '있잖아',
+    '그냥',
+    '말하자면'
   ];
 
   String clean(String rawTranscript) {
@@ -79,7 +109,8 @@ class SpeechCleanerService {
       }
     }
 
-    final cjkRepeatRegex = RegExp(r'([\u4e00-\u9fa5\u3040-\u30ff\uac00-\ud7af]{1,6})\1+');
+    final cjkRepeatRegex =
+        RegExp(r'([\u4e00-\u9fa5\u3040-\u30ff\uac00-\ud7af]{1,6})\1+');
     while (cjkRepeatRegex.hasMatch(text)) {
       text = text.replaceAllMapped(cjkRepeatRegex, (match) {
         duplicateCount++;

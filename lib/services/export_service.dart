@@ -5,7 +5,7 @@ import '../l10n/app_localizations.dart';
 import '../models/capsule_model.dart';
 import '../models/daily_digest_model.dart';
 import '../screens/widgets/pro_modal.dart';
-import '../theme/app_theme.dart';
+import '../theme/app_theme_capsule.dart';
 import 'ad_service.dart';
 import 'monetization_provider.dart';
 

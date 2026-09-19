@@ -1,3 +1,5 @@
+import com.android.build.gradle.BaseExtension
+
 allprojects {
     repositories {
         google()
@@ -17,20 +19,35 @@ subprojects {
 }
 
 subprojects {
-    plugins.withId("com.android.library") {
-        configure<com.android.build.gradle.BaseExtension> {
+    afterEvaluate {
+        extensions.findByType(BaseExtension::class.java)?.apply {
             compileSdkVersion(36)
-        }
-    }
-    plugins.withId("com.android.application") {
-        configure<com.android.build.gradle.BaseExtension> {
-            compileSdkVersion(36)
+            if (ndkVersion == null || ndkVersion!!.isBlank() || ndkVersion!!.startsWith("28.")) {
+                ndkVersion = "29.0.13113456"
+            }
+            compileOptions {
+                sourceCompatibility = JavaVersion.VERSION_17
+                targetCompatibility = JavaVersion.VERSION_17
+            }
         }
     }
 }
 
 subprojects {
     project.evaluationDependsOn(":app")
+}
+
+subprojects {
+    tasks.withType<JavaCompile>().configureEach {
+        sourceCompatibility = JavaVersion.VERSION_17.toString()
+        targetCompatibility = JavaVersion.VERSION_17.toString()
+        options.compilerArgs.add("-Xlint:-options")
+    }
+    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+        compilerOptions.jvmTarget.set(
+            org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+        )
+    }
 }
 
 tasks.register<Delete>("clean") {

@@ -133,6 +133,74 @@ class AppLocalizationsJa extends AppLocalizations {
   String get audioRecordTitle => '音声録音データ';
 
   @override
+  String get audioFileMissing => '録音ファイルが見つからないため再生できません';
+
+  @override
+  String get audioOnlySaveHint => '文字を空にして録音のみ保存できます';
+
+  @override
+  String get recordingSavedTitle => '録音が完了しました';
+
+  @override
+  String get recordingSavedSubtitle => '元の録音を保存しました。文字起こしは後から実行できます。';
+
+  @override
+  String get saveRecordingOnly => '録音を保存';
+
+  @override
+  String get transcribeLater => '後で文字起こし';
+
+  @override
+  String get transcribeToText => '文字に変換';
+
+  @override
+  String get retranscribe => '再文字起こし';
+
+  @override
+  String get transcribing => '文字起こし中…';
+
+  @override
+  String get transcriptionNotConfigured => '文字起こしサービスが未設定です';
+
+  @override
+  String get transcriptionFailed => '文字起こしに失敗しました。後でもう一度お試しください。';
+
+  @override
+  String get clearTranscript => '文字をクリア';
+
+  @override
+  String get audioRecordingDefaultTitle => '音声録音メモ';
+
+  @override
+  String get noTranscriptYetHint => 'まだ文字起こしされていません';
+
+  @override
+  String get transcriptionPreparing => '準備中…';
+
+  @override
+  String get transcriptionConverting => '音声を変換中…';
+
+  @override
+  String transcriptionProgress(int percent) {
+    return '文字起こし中 $percent%';
+  }
+
+  @override
+  String get transcriptionCompleted => '文字起こし完了';
+
+  @override
+  String get transcriptionCancelled => '文字起こしをキャンセルしました';
+
+  @override
+  String get cancelTranscription => 'キャンセル';
+
+  @override
+  String get runLocalSummary => 'ローカル要約を生成';
+
+  @override
+  String get transcriptionModelMissing => '端末内 Whisper モデルが見つかりません';
+
+  @override
   String get dailyDigestTitle => '今日の日報';
 
   @override
@@ -143,4 +211,136 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get speechCleanedBadge => 'クリーン済み';
+
+  @override
+  String get navToday => '今日';
+
+  @override
+  String get navCalendar => 'カレンダー';
+
+  @override
+  String get navNotes => 'メモ';
+
+  @override
+  String get navTodos => 'タスク';
+
+  @override
+  String get todayFocus => '今日のフォーカス';
+
+  @override
+  String get todayTodosTitle => '今日のタスク';
+
+  @override
+  String get overdueTodosTitle => '期限切れ';
+
+  @override
+  String get todayNotesTitle => '今日のメモ';
+
+  @override
+  String get addTodo => 'タスクを追加';
+
+  @override
+  String get editTodo => 'タスクを編集';
+
+  @override
+  String get saveTodo => '保存';
+
+  @override
+  String get todoTitleLabel => 'タスク名';
+
+  @override
+  String get todoTitleRequired => 'タスク名を入力してください';
+
+  @override
+  String get todoDescLabel => '詳細とメモ';
+
+  @override
+  String get dueDateLabel => '予定日時';
+
+  @override
+  String get priorityLabel => '優先度';
+
+  @override
+  String get priorityLow => '低';
+
+  @override
+  String get priorityMedium => '中';
+
+  @override
+  String get priorityHigh => '高';
+
+  @override
+  String get priorityUrgent => '緊急';
+
+  @override
+  String get enableReminder => '通知を有効にする';
+
+  @override
+  String get persistentReminder => '完了するまで通知を継続';
+
+  @override
+  String get repeatRuleLabel => '繰り返し';
+
+  @override
+  String get repeatNone => '繰り返さない';
+
+  @override
+  String get repeatDaily => '毎日';
+
+  @override
+  String get repeatWeekly => '毎週';
+
+  @override
+  String get repeatMonthly => '毎月';
+
+  @override
+  String get filterPending => '未完了';
+
+  @override
+  String get filterCompleted => '完了済み';
+
+  @override
+  String get filterOverdue => '期限切れ';
+
+  @override
+  String get snooze30m => '30分後に通知';
+
+  @override
+  String get snooze1h => '1時間後に通知';
+
+  @override
+  String get snooze3h => '3時間後に通知';
+
+  @override
+  String get snoozeTomorrow => '明日通知';
+
+  @override
+  String get deleteTodoTitle => 'タスクを削除';
+
+  @override
+  String get deleteTodoConfirm => 'このタスクを削除してもよろしいですか？';
+
+  @override
+  String get convertToTodo => 'タスクに変換';
+
+  @override
+  String get convertAllToTodos => 'すべてタスクに変換';
+
+  @override
+  String get backToToday => '今日へ戻る';
+
+  @override
+  String get viewMonth => '月';
+
+  @override
+  String get viewWeek => '週';
+
+  @override
+  String get viewDay => '日';
+
+  @override
+  String get settingsTitle => '設定と環境設定';
+
+  @override
+  String get notificationCheck => '通知とアラームの権限を確認';
 }

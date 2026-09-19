@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../l10n/app_localizations.dart';
-import '../../theme/app_theme.dart';
+import '../../theme/app_theme_capsule.dart';
 
 class RecordButton extends StatelessWidget {
   final bool isRecording;

@@ -51,7 +51,10 @@ class AiSummaryService {
 
   String _generateSummary(String text) {
     if (text.length <= 60) return text;
-    final sentences = text.split(RegExp(r'[。！？\n\.\!\?]')).where((s) => s.trim().isNotEmpty).toList();
+    final sentences = text
+        .split(RegExp(r'[。！？\n\.\!\?]'))
+        .where((s) => s.trim().isNotEmpty)
+        .toList();
     if (sentences.isEmpty) return text;
     if (sentences.length == 1) return sentences.first.trim();
     return '。';
@@ -59,17 +62,40 @@ class AiSummaryService {
 
   List<String> _extractActionItems(String text) {
     final actionKeywords = [
-      '要', '記得', '去', '買', '確認', '聯絡', '討論', '完成', '準備',
-      '測試', '提交', '寄信', '安排', '處理', '檢查', '更新', 'todo',
-      'need to', 'check', 'buy', 'send', 'call', 'review'
+      '要',
+      '記得',
+      '去',
+      '買',
+      '確認',
+      '聯絡',
+      '討論',
+      '完成',
+      '準備',
+      '測試',
+      '提交',
+      '寄信',
+      '安排',
+      '處理',
+      '檢查',
+      '更新',
+      'todo',
+      'need to',
+      'check',
+      'buy',
+      'send',
+      'call',
+      'review'
     ];
 
     final items = <String>[];
-    final clauses = text.split(RegExp(r'[，,。！？\n\.\!\?；;]')).where((s) => s.trim().isNotEmpty);
+    final clauses = text
+        .split(RegExp(r'[，,。！？\n\.\!\?；;]'))
+        .where((s) => s.trim().isNotEmpty);
 
     for (final clause in clauses) {
       final trimmed = clause.trim();
-      final hasAction = actionKeywords.any((kw) => trimmed.toLowerCase().contains(kw));
+      final hasAction =
+          actionKeywords.any((kw) => trimmed.toLowerCase().contains(kw));
       if (hasAction && trimmed.length >= 3 && trimmed.length <= 40) {
         if (!items.contains(trimmed)) {
           items.add(trimmed);
@@ -103,7 +129,18 @@ class AiSummaryService {
   List<String> _generateTags(String text) {
     final lower = text.toLowerCase();
     final tagRules = {
-      '工作': ['會議', '專案', '討論', '進度', '客戶', '提交', '開發', 'work', 'project', 'meeting'],
+      '工作': [
+        '會議',
+        '專案',
+        '討論',
+        '進度',
+        '客戶',
+        '提交',
+        '開發',
+        'work',
+        'project',
+        'meeting'
+      ],
       '待辦': ['記得', '要', '買', '寄', 'todo', 'task', 'check'],
       '靈感': ['想法', '思考', '設計', '創新', '點子', 'idea', 'inspiration'],
       '生活': ['回家', '吃飯', '運動', '健康', '買菜', 'life', 'home'],

@@ -1,4 +1,4 @@
-import java.util.Properties
+﻿import java.util.Properties
 import java.io.FileInputStream
 
 plugins {
@@ -15,10 +15,11 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "com.capsulenote.app"
+    ndkVersion = "29.0.13113456"
     compileSdk = 36
-    ndkVersion = flutter.ndkVersion
 
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -49,6 +50,13 @@ android {
 
     buildTypes {
         release {
+            // R8 was stripping WorkManager/Room and crashing at startup on device.
+            isMinifyEnabled = false
+            isShrinkResources = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
             val releaseSigning = signingConfigs.getByName("release")
             if (releaseSigning.storeFile != null && releaseSigning.storeFile!!.exists()) {
                 signingConfig = releaseSigning
@@ -57,6 +65,10 @@ android {
             }
         }
     }
+}
+
+dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
 
 kotlin {

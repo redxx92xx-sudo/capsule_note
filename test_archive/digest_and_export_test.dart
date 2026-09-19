@@ -9,7 +9,8 @@ void main() {
     final cleaner = SpeechCleanerService.instance;
 
     test('cleans English filler words and extracts core meaning', () {
-      const raw = 'Um you know basically we need to finish the sprint review actually.';
+      const raw =
+          'Um you know basically we need to finish the sprint review actually.';
       final cleaned = cleaner.clean(raw);
 
       expect(cleaned.toLowerCase().contains('basically'), false);

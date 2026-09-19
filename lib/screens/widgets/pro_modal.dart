@@ -3,7 +3,7 @@ import '../../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../services/ad_service.dart';
 import '../../services/monetization_provider.dart';
-import '../../theme/app_theme.dart';
+import '../../theme/app_theme_capsule.dart';
 
 class ProModal extends StatelessWidget {
   const ProModal({super.key});

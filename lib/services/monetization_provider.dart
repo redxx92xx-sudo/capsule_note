@@ -25,7 +25,8 @@ class MonetizationProvider extends ChangeNotifier {
 
   int get remainingDailyQuota {
     if (_isPro) return 999;
-    final baseRemaining = (dailyBaseQuota - _usedToday).clamp(0, dailyBaseQuota);
+    final baseRemaining =
+        (dailyBaseQuota - _usedToday).clamp(0, dailyBaseQuota);
     return baseRemaining + _bonusQuota;
   }
 
@@ -112,7 +113,8 @@ class MonetizationProvider extends ChangeNotifier {
     await _saveState();
 
     if (_creationCount % 3 == 0) {
-      debugPrint('Triggering Interstitial Ad (creation count: $_creationCount)');
+      debugPrint(
+          'Triggering Interstitial Ad (creation count: $_creationCount)');
       AdService.instance.showInterstitialAd();
     }
   }

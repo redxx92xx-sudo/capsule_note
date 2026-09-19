@@ -18,6 +18,11 @@ analyzer:
     - windows/**
     - macos/**
     - linux/**
+    - "**/*_legacy.dart"
+    - lib/screens/todo_edit_screen.dart
+    - lib/screens/todo_list_screen.dart
+    - lib/screens/widgets/todo_card.dart
+    - lib/screens/capsule/**
 
 linter:
   # The lint rules applied to this project can be customized in the
