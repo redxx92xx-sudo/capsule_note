@@ -82,10 +82,9 @@ Future<void> registerBackgroundResyncCallback() async {
   try {
     final handle = PluginUtilities.getCallbackHandle(backgroundResyncCallback);
     if (handle == null) return;
-    await kBackgroundChannel.invokeMethod(
-      'saveResyncHandle',
-      handle.toRawHandle(),
-    );
+    await kBackgroundChannel
+        .invokeMethod('saveResyncHandle', handle.toRawHandle())
+        .timeout(const Duration(seconds: 5));
   } catch (e) {
     debugPrint('registerBackgroundResyncCallback failed: $e');
   }
@@ -121,10 +120,9 @@ Future<void> registerBackgroundAlarmActionCallback() async {
       backgroundAlarmActionCallback,
     );
     if (handle == null) return;
-    await kBackgroundChannel.invokeMethod(
-      'saveAlarmActionHandle',
-      handle.toRawHandle(),
-    );
+    await kBackgroundChannel
+        .invokeMethod('saveAlarmActionHandle', handle.toRawHandle())
+        .timeout(const Duration(seconds: 5));
   } catch (e) {
     debugPrint('registerBackgroundAlarmActionCallback failed: $e');
   }

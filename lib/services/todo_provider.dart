@@ -233,6 +233,12 @@ class TodoProvider extends ChangeNotifier {
       await _loadLocalePreference();
       await _loadReminderSettings();
       await _loadAlarmSound();
+    } catch (e) {
+      // Never let a DB/migration failure propagate out of loadTodos: the
+      // caller (main.dart's post-first-frame init) must be able to continue
+      // instead of leaving the isolate stuck before runApp() is reached.
+      rkTrace('TodoProvider.loadTodos FAILED: $e');
+      debugPrint('待辦資料載入失敗：$e');
     } finally {
       _isLoading = false;
       notifyListeners();
